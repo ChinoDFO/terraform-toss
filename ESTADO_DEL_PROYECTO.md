@@ -10,6 +10,83 @@
 
 ---
 
+## 2026-11-25 (10) — Confirmado: el MCP de Studio YA carga en esta sesión (app de escritorio) tras mover el directorio
+
+**Hecho:**
+- Se confirma la hipótesis de la entrada (9): el problema era solo el directorio de trabajo de la
+  sesión, no el registro del MCP. Tras moverla a la carpeta del repo, las herramientas de
+  `Roblox_Studio` (`execute_luau`, `search_game_tree`, `start_stop_play`, `get_console_output`,
+  `screen_capture`, y varias más de generación de mallas/materiales/texturas) aparecen con
+  normalidad en esta sesión de la **app de escritorio**.
+- Corridas las 10 pruebas de `tests/TestRunner.luau` vía `execute_luau`
+  (`return require(game:GetService("ServerStorage").Tests.TestRunner).run()`):
+  **10 OK, 0 fallos** — mismo resultado que la sesión de terminal (entrada 5).
+- Studio tiene un solo place abierto (`Place1`, sin publicar — `persistedToCloud: false`, esperado
+  para pruebas locales con `game.GameId == 0`), en modo **Edit** (datamodel disponible: solo
+  `Edit`; no está en modo Play).
+- **Corrección a lo dicho en las entradas (5) y (8):** no es cierto que el registro de
+  `Roblox_Studio` sea exclusivo de la sesión de terminal. El MCP está en `~/.claude.json` **a nivel
+  de proyecto** (ruta exacta del repo) y lo puede usar cualquier sesión —de terminal o de la app de
+  escritorio— siempre que arranque (o se mueva, con la herramienta de cambio de directorio) parada
+  en la carpeta del repo.
+
+**Esta sesión queda para:** playtest (`start_stop_play`), pruebas, generación de mallas/materiales,
+y auditoría del place vía MCP — como pedía la tarea que la creó. Para git/GitHub/planeación sigue
+sirviendo la otra sesión (app de escritorio, sin MCP de Studio).
+
+**Siguiente paso sugerido (en orden):**
+1. Playtest manual (`start_stop_play`) para confirmar que el bucle central sigue íntegro tras los
+   últimos cambios de HUD/sonidos del PR #1 (todavía sin mergear).
+2. Seguir con el resto de la Semana 1 (`docs/CONTEXTO_PROYECTO.md` §6) usando esta sesión para la
+   parte que necesite Studio.
+3. Sigue pendiente: invitar al segundo cofundador al repo de GitHub (falta su usuario).
+
+---
+
+## 2026-11-25 (9) — Diagnóstico: por qué esta sesión (otra pestaña Code) tampoco tenía el MCP de Studio
+
+**Importante — esto corrige/completa la entrada (8):** no era (solo) que hiciera falta "reiniciar la
+sesión" en abstracto. Esta sesión nueva de la app de escritorio (pestaña Code) **arrancó con el
+directorio de trabajo en `C:\Users\dfofl`** (la carpeta de usuario), **no** en la carpeta del repo.
+El MCP `Roblox_Studio` está registrado en `~/.claude.json` **a nivel de proyecto**, bajo la clave
+exacta `C:/Users/dfofl/PP/ROBLOX GAMES/TERRAFORM/terraform-toss` (apunta a
+`%LOCALAPPDATA%\Roblox\mcp.bat`). Como la sesión no estaba parada en esa carpeta, nunca cargó esa
+config — ni `execute_luau` ni el resto de herramientas de Studio aparecieron (confirmado con
+`ToolSearch` buscando "roblox"/"execute_luau"/"studio" → nada, y con `claude mcp list` desde el
+Bash de esta sesión → solo Docs/Notion/Google Drive, sin `Roblox_Studio`).
+
+**Hecho:**
+- Confirmado leyendo `~/.claude.json` a mano que el MCP `Roblox_Studio` SÍ existe, pero registrado
+  solo para la ruta de proyecto exacta del repo, no para la carpeta de usuario donde arrancó esta
+  sesión.
+- Usada la herramienta de la app (`change_directory`) para mover esta sesión a la carpeta del repo
+  (`C:\Users\dfofl\PP\ROBLOX GAMES\TERRAFORM\terraform-toss`). El resultado de la herramienta es
+  explícito: el cambio queda aplicado **recién al terminar este turno**, y esta sesión **no se
+  vuelve a invocar sola** cuando eso pasa. Por eso la confirmación real de que las herramientas de
+  Studio cargan (y correr las 10 pruebas) queda pendiente para el siguiente mensaje/turno, no de
+  esta misma entrada.
+
+**Pendiente (siguiente turno, en esta misma sesión):**
+- Verificar de nuevo las herramientas de Studio (`execute_luau`, `search_game_tree`,
+  `start_stop_play`, `get_console_output`, `screen_capture`) ahora que el directorio de trabajo es
+  el correcto.
+- Si cargan: correr `return require(game:GetService("ServerStorage").Tests.TestRunner).run()` y
+  confirmar 10/10 (como en la sesión de terminal de la entrada (5)).
+- Si SIGUEN sin cargar: el problema no era (solo) el directorio — probar cerrar y reabrir esta
+  sesión por completo (no solo cambiar de carpeta) para que la app de escritorio relea
+  `mcpServers` de `~/.claude.json`.
+
+**Siguiente paso sugerido (en orden):**
+1. Escribir cualquier mensaje a esta sesión para que arranque un turno nuevo ya en la carpeta del
+   repo, y repetir la verificación de las herramientas de Studio.
+2. Si confirma: correr las 10 pruebas y dejar esta sesión como la de playtest/Studio (el objetivo
+   original de la tarea que la creó).
+3. Si no confirma: cerrar y volver a abrir esta sesión (no solo cambiar de carpeta) para forzar la
+   relectura del MCP registrado; si tampoco así aparece, revisar si `%LOCALAPPDATA%\Roblox\mcp.bat`
+   existe y corre bien a mano (fuera de Claude) antes de seguir sospechando de la sesión.
+
+---
+
 ## 2026-11-25 (8) — PR del HUD/sonidos abierto + auditoría de código (sesión de la app de escritorio)
 
 **Importante sobre las dos sesiones de Claude en esta máquina:** hay una sesión de **terminal**

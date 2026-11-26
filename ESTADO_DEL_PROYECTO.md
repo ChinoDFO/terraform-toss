@@ -10,6 +10,45 @@
 
 ---
 
+## 2026-11-26 (13) — Revisión de cumplimiento contra el plan (CLAUDE.md + docs) — 1 corrección real
+
+A pedido del usuario, releí los 3 PR nuevos (#2, #3, #4) línea por línea contra las reglas no
+negociables de `CLAUDE.md` y las decisiones congeladas de `docs/CONTEXTO_PROYECTO.md` §9.
+
+**Resultado: todo en orden, con UNA corrección real** (PR #4, ya corregida y pusheada): el retraso
+de "sin tienda los primeros 3 minutos" se estaba aplicando en CADA sesión, pero "FTUE" (primera
+experiencia) es, igual que la regla hermana ya existente (el primer lanzamiento siempre es Poco
+común, con `data.totalThrows == 0`), algo de la PRIMERA vez que juega esa cuenta — no algo que se
+repite cada vez que alguien que ya jugó antes vuelve a entrar. Corregido: ahora solo se retrasa si
+`data.totalThrows == 0` al cargar; quien ya jugó antes ve la tienda de inmediato
+(`ShopAvailableAt = 0`). Reconfirmado en vivo que el caso de jugador nuevo sigue funcionando.
+
+**Checklist repasado (todo en verde salvo lo de arriba):**
+- Servidor autoritativo / cliente nunca confiable: `IndexController` es 100 % lectura, no decide
+  nada.
+- RemoteEvents y patrones prohibidos: sin `RemoteFunction`, sin `wait()`/`spawn()`/`delay()`
+  crudos, sin `loadstring`/`getfenv`/`setfenv`/`_G` (grep sobre los 3 diffs completos: cero
+  coincidencias).
+- Monetización: sin precios escritos a mano, `PolicyService` intacto, el retraso de tienda
+  **refuerza** "sin dark patterns" en vez de romperlo.
+- Fórmulas de balance solo en `Formulas.luau`/`Config`: el tope de suerte está ahí (reusando
+  `Rarities.MAX_LUCK`, no una constante duplicada). `FTUE_SHOP_DELAY` es una constante de
+  comportamiento local de `PurchaseService`, igual que `COOLDOWN` en `ThrowService` o
+  `TURBO_STREAK` en `DailyService` — mismo patrón que ya usaba el proyecto, no una fórmula de
+  balance que debiera centralizarse.
+- Comentarios y textos de UI en español, nombres de código en inglés: confirmado en
+  `IndexController`.
+- Ninguna decisión congelada de §9 (concepto, suerte no se vende, sin comercio, etc.) se reabrió.
+- Las 5 ramas/PR siguen intactas, nada se perdió; el PR #1 (HUD/sonidos) sigue exactamente igual
+  a como lo dejó la entrada (8), sin tocar.
+
+**Pendiente de la corrección de hoy:** no se pudo probar en vivo la rama de "jugador que regresa"
+del PR #4 (`data.totalThrows > 0` → tienda inmediata) porque el place de prueba usa datos en
+memoria que se borran al salir de Play — queda para cuando alguien lo pruebe con datos que
+persistan de verdad (lugar publicado, o DataStore real).
+
+---
+
 ## 2026-11-26 (12) — Rojo reconectado de verdad + los 3 PR (#2, #3, #4) verificados dentro de Studio
 
 **Lo que pasó, en orden (para la próxima vez que esto se rompa):**

@@ -1,0 +1,15 @@
+# Archivos de Studio (el mapa vive en la nube / Team Create, no en Git)
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+*.rbxm
+# Generados
+sourcemap.json
+Packages/
+# Sistema
+.DS_Store
+Thumbs.db
+# Secretos (nunca subir)
+.env
+*.key

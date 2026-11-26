@@ -1,0 +1,53 @@
+{
+  "name": "terraform-toss",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
+      "Remotes": {
+        "$className": "Folder",
+        "TrainTap": { "$className": "RemoteEvent" },
+        "ThrowStart": { "$className": "RemoteEvent" },
+        "ThrowRelease": { "$className": "RemoteEvent" },
+        "SetAutoLaunch": { "$className": "RemoteEvent" },
+        "BuyUpgrade": { "$className": "RemoteEvent" },
+        "RequestPurchase": { "$className": "RemoteEvent" },
+        "OpenFreeEgg": { "$className": "RemoteEvent" },
+        "ClaimDaily": { "$className": "RemoteEvent" },
+        "ThrowResult": { "$className": "RemoteEvent" },
+        "Notify": { "$className": "RemoteEvent" }
+      },
+      "ServerState": {
+        "$className": "Folder"
+      }
+    },
+
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "Tests": {
+        "$path": "tests"
+      }
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    }
+  }
+}

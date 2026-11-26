@@ -56,12 +56,12 @@ function Formulas.gardenCapacity(hasExtraSlotsPass: boolean, hasPlus: boolean): 
 		+ (if hasPlus then Formulas.PLUS_EXTRA_SLOTS else 0)
 end
 
--- Suerte gratuita: +2 % por cada criatura distinta descubierta + bonos de evento. Tope 5 (diseño).
-Formulas.MAX_LUCK = 5
-
+-- Suerte gratuita: +2 % por cada criatura distinta descubierta + bonos de evento.
+-- Tope de diseño = Rarities.MAX_LUCK (Odds.forLuck ya lo aplica también; aquí es solo para
+-- que el atributo "Luck" que ve el jugador no muestre un número por encima del tope real).
 function Formulas.luck(discovered: number, bloomActive: boolean, adBoostActive: boolean): number
 	local raw = 1 + 0.02 * discovered + (if bloomActive then 0.5 else 0) + (if adBoostActive then 0.25 else 0)
-	return math.min(raw, Formulas.MAX_LUCK)
+	return math.min(raw, Rarities.MAX_LUCK)
 end
 
 return Formulas

@@ -127,10 +127,10 @@ test("Formulas: costes base y monotonía de nivel", function()
 	)
 end)
 
-test("Formulas.luck respeta el tope de diseño (máx. 5)", function()
+test("Formulas.luck respeta el tope de diseño (Rarities.MAX_LUCK)", function()
 	assert(Formulas.luck(0, false, false) == 1, "base sin bonos debe ser 1")
 	assert(near(Formulas.luck(30, true, true), 2.35), "con el roster actual no debería acercarse al tope")
-	assert(Formulas.luck(1000, true, true) == Formulas.MAX_LUCK, "debe recortar a " .. Formulas.MAX_LUCK)
+	assert(Formulas.luck(1000, true, true) == Rarities.MAX_LUCK, "debe recortar a " .. Rarities.MAX_LUCK)
 end)
 
 test("Validate.number rechaza NaN/infinito/fuera de rango/tipo erróneo", function()

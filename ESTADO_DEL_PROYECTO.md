@@ -10,6 +10,21 @@
 
 ---
 
+## 2026-11-25 (3) — Primer commit hecho
+
+**Hecho:**
+- Primer commit del repo: `080d781` — "chore: primer commit del starter + tooling (Rokit, StyLua,
+  Selene)". Incluye todo el starter, el `rokit.toml` completo, el formateo de StyLua aplicado y
+  esta bitácora. **Todavía NO hay remoto en GitHub** (el repo sigue siendo solo local).
+
+**Siguiente paso sugerido (en orden):**
+1. Decidir nombre/reparto de equipo (pendiente de los cofundadores, ver entrada de abajo).
+2. Crear repo privado en GitHub, hacer `git remote add` + `push`, invitar al otro cofundador.
+3. Abrir Studio, activar el MCP, confirmar conexión, correr las 10 pruebas de `TestRunner.luau`.
+4. Seguir con la Semana 1 del calendario (`docs/CONTEXTO_PROYECTO.md` §6).
+
+---
+
 ## 2026-11-25 (2) — Rokit instalado y verificado
 
 **Hecho:**

@@ -10,6 +10,154 @@
 
 ---
 
+## 2026-11-25 (8) — PR del HUD/sonidos abierto + auditoría de código (sesión de la app de escritorio)
+
+**Importante sobre las dos sesiones de Claude en esta máquina:** hay una sesión de **terminal**
+(`claude` en una consola) con el MCP `Roblox_Studio` conectado — esa es la única que puede usar
+`execute_luau`, `start_stop_play`, etc. Esta sesión (la de la **app de escritorio**, pestaña Code)
+registró el mismo MCP en su propia config (`claude mcp add ... Roblox_Studio`), pero **no carga
+las herramientas de Studio en caliente**: haría falta reiniciar esta sesión para tenerlas, y aun
+así cada `claude mcp add` es local a quien lo corrió. En resumen: **para playtest/pruebas en
+Studio, usa la sesión de terminal; para git/GitHub/revisión de código, cualquiera de las dos
+sirve.** Dile esto a tu cofundador si abre su propia sesión aquí para que no se confunda buscando
+herramientas de Studio donde no están.
+
+**Hecho:**
+- Revisados los cambios sin commitear que dejó la sesión de terminal (HUD 2 decimales + barra
+  mínima, sonidos y partículas del lanzamiento: `Config/Sfx.luau`, `UI/Sfx.luau`, `UI/Vfx.luau`,
+  `HudController.luau`, `ThrowController.luau`). Todo limpio: `--!strict`, sin patrones prohibidos,
+  solo cliente/cosmético, no toca nada autoritativo del servidor.
+- `selene src` (0 errores, el único warning es el preexistente de `Odds.luau`, no relacionado) y
+  `stylua --check src tests` (limpio) — confirmado desde esta sesión con los binarios de Rokit
+  (`%USERPROFILE%\.rokit\bin\`; nota: esa carpeta no estaba en el PATH de esta sesión aunque la
+  otra sesión ya la instaló — hubo que llamarlos por ruta completa).
+- Commit `1b0a01b` en la rama `feat/hud-planeta-sonidos` + push + **PR abierto**:
+  [`#1`](https://github.com/ChinoDFO/terraform-toss/pull/1) — estado `OPEN`, `MERGEABLE`, sin
+  revisión todavía (correcto: lo tiene que revisar el otro cofundador, no lo fusiono yo). No hay
+  CI configurado en el repo (esperado, no es un bloqueo en esta etapa).
+- **Auditoría de seguridad/correctitud** de todo el código del servidor y la lógica compartida
+  crítica (`DataService`, `PurchaseService`, `PolicyGate`, `ThrowService`, `EconomyService`,
+  `CreatureService`, `TerraformService`, `DailyService`, `PlusService`, `Main.server`, `Net`,
+  `Formulas`, `Odds`, `WeightedRandom`, `Validate`, `RateLimiter`, `Perks`, `Retry`, `Meter`,
+  `Zones`) y de la tienda del cliente (`ShopController`, `PriceService`): **no se encontraron
+  bugs.** Confirmado explícitamente que SÍ se cumplen las reglas no negociables de `CLAUDE.md`:
+  servidor autoritativo en todo, `RateLimiter`/`Validate` en cada RemoteEvent, bloqueo de sesión +
+  backoff + `BindToClose` en `DataService`, `ProcessReceipt` idempotente, `PolicyGate` con modo
+  restrictivo por defecto si falla la consulta, pity del Huevo Estelar, confirmación en dos pasos
+  ≥ 400 R$ (`Products.CONFIRM_THRESHOLD_ROBUX`, usado en `ShopController`), botón de compra activo
+  recién después de 1 s, precios siempre vía `GetProductInfoAsync` (`PriceService`, con caché de
+  60 s), probabilidades visibles con el *pity* y el aviso de redondeo. Pesos verificados a mano:
+  rarezas 62+25+10+2.7+0.3 = 100, huevo 75+22+3 = 100, mutaciones suman 100.
+- Revisado `repos/ChinoDFO/terraform-toss/collaborators`: **solo está `ChinoDFO`.** El segundo
+  cofundador todavía NO está invitado — falta su usuario de GitHub para invitarlo.
+
+**Pendiente / decisiones abiertas (sin cambios de fondo, solo para que no se pierdan):**
+- Invitar al segundo cofundador al repo de GitHub (falta su usuario).
+- Nombre definitivo del juego/estudio y reparto de ingresos (decisión de los 2, no de Claude).
+- Balance del ritmo del planeta: con solo lanzamientos Comunes (peor caso) son ~9.216 lanzamientos
+  entre todos para llegar a 100 %; en la práctica la suerte sube con las criaturas descubiertas
+  (hasta ×5), así que el ritmo real debería ser más rápido que ese peor caso. No se tocó ningún
+  número de `Config/Rarities.luau` — es una decisión de balance que conviene confirmar con un
+  playtest real de varios jugadores a la vez, no con matemática de escritorio.
+
+**Siguiente paso sugerido (en orden):**
+1. El otro cofundador revisa y aprueba (o pide cambios) en el [PR #1](https://github.com/ChinoDFO/terraform-toss/pull/1).
+2. Conseguir su usuario de GitHub e invitarlo como colaborador.
+3. Con los dos conectados: decidir nombre/reparto, y repartirse Semana 1 (`docs/CONTEXTO_PROYECTO.md`
+   §6) — código para quien tenga Claude en terminal con Studio conectado, mapa/arte en Team Create
+   para el otro.
+
+---
+
+## 2026-11-25 (7) — Playtest confirmado + arreglo de la barra del planeta
+
+**Hecho:**
+- Playtest real en Studio (vía MCP desde terminal, `start_stop_play` + trazas temporales sin tocar
+  `src/`): el lanzamiento llega al servidor, el servidor decide (rareza, zona, celdas) y el cliente
+  recibe `ThrowResult` bien. El dinero y el Poder suben con normalidad. **El bucle central funciona
+  de punta a punta.**
+- **Encontrado (no era un bug de lógica, sí de interfaz):** con 1.024 celdas visuales, el primer
+  lanzamiento solo sube `PlanetPercent` ~0,03 %, y `HudController` lo redondeaba a 1 decimal → se
+  veía "0.0 %" aunque el valor real ya había subido. Sensación de "esto no sirve de nada" en los
+  primeros lanzamientos.
+- **Arreglado** en `HudController.luau`: ahora muestra 2 decimales mientras el porcentaje sea menor
+  a 1 % (p. ej. "0.03 %"), y la barra visual tiene un ancho mínimo del 1 % en cuanto hay algo de
+  avance (puramente cosmético, el valor real que manda el servidor no cambia). `selene`/`stylua`
+  limpios.
+- Confirmado que el error de consola `rbxassetid://203785492` ("Pop Close Sound") **no viene de
+  nuestro código** (no está en `src/`, nuestros sonidos usan `rbxasset://sounds/...` del motor) —
+  es de un plugin de Studio o la UI interna, se puede ignorar.
+
+**Siguiente paso sugerido (en orden):**
+1. Repetir el playtest para confirmar que el porcentaje del planeta ya se ve bien desde el primer
+   lanzamiento, y que los sonidos/efectos de la entrada anterior se sienten bien jugando.
+2. Seguir con el resto de la Semana 1 (`docs/CONTEXTO_PROYECTO.md` §6): más pulido del bucle central
+   si aparece algo raro, y coordinar con Dev B la plataforma/mapa (no es código).
+3. Invitar al segundo cofundador como colaborador del repo (pendiente de entradas anteriores).
+
+---
+
+## 2026-11-25 (6) — Semana 1, tarea 1: sonidos y efectos del lanzamiento
+
+**Hecho (solo cliente, cosmético — no toca nada del servidor ni las pruebas):**
+- `src/shared/Config/Sfx.luau`: tabla de sonidos con rutas `rbxasset://sounds/...` (built-in del
+  motor de Roblox, gratis y sin licencia) marcados como **TEMPORALES** — sustituir por audio
+  propio/licenciado antes de publicar. Verificadas contra una lista de rutas clásicas confirmadas
+  (no inventadas): `electronicpingshort.mp3` (carga/bloom), `switch.mp3` (suelta), `splat.mp3`
+  (aterrizaje), `snap.mp3` (revelación de rareza Épica/Legendaria), `victory.mp3` (planeta
+  restaurado).
+- `src/client/UI/Sfx.luau`: helper para reproducir sonido de un solo disparo (`play`) y en bucle
+  controlable (`startLoop`/`stopLoop`), con limpieza automática vía `Debris`.
+- `src/client/UI/Vfx.luau`: estallido de partículas al aterrizar una cápsula, con el color de la
+  rareza; usa el `ParticleEmitter` sin textura propia (círculo blanco del motor), cero assets
+  nuevos.
+- `ThrowController.luau`: sonido de carga en bucle con el tono subiendo según el medidor, sonido de
+  suelta al lanzar, y sonido + partículas al aterrizar la cápsula (propia o de otro jugador).
+- `HudController.luau`: sonido extra cuando tu propio lanzamiento sale Épico o Legendario, y
+  sonidos distintos para Bloom y Planeta Restaurado.
+- `selene src` (0 errores, mismo warning preexistente de `Odds.luau`) y `stylua --check src` (limpio).
+
+**Pendiente de verificar (necesita Studio — hazlo en la sesión de terminal con `claude`):**
+- Jugar una ronda real: cargar y soltar LANZAR (oír el tono subir y el "click" de suelta), ver el
+  estallido de partículas al aterrizar, y si sale Épico/Legendario o toca un Bloom/100 %, confirmar
+  que se oyen los sonidos nuevos y no se cruzan mal entre sí con varios jugadores lanzando a la vez.
+- Las 10 pruebas de `TestRunner.luau` no deberían verse afectadas (nada de esto es servidor), pero
+  conviene correrlas de nuevo después del próximo cambio de servidor.
+
+**Siguiente paso sugerido (en orden):**
+1. Playtest manual de este cambio (sonidos/efectos) en Studio.
+2. Seguir con el resto de la Semana 1 (`docs/CONTEXTO_PROYECTO.md` §6): pulir bucle central/HUD si
+   algo se siente raro al jugar, y coordinar con Dev B la plataforma/mapa (no es código).
+3. Invitar al segundo cofundador como colaborador del repo (pendiente de entradas anteriores).
+
+---
+
+## 2026-11-25 (5) — MCP de Studio confirmado y 10/10 pruebas pasadas
+
+**Hecho:**
+- Confirmado que el MCP `Roblox_Studio` conecta bien desde una sesión de terminal con el CLI
+  `claude` (Studio abierto + interruptor "Enable Studio as MCP server" activo). **Importante:** esa
+  conexión es un registro *local* del CLI (`claude mcp add ... Roblox_Studio`, scope "Local config,
+  private to you in this project") — **no** se ve desde la app de escritorio de Claude Code (ahí no
+  aparece como conector de la sesión). Para usar `execute_luau`/`start_stop_play`/etc. hay que hacerlo
+  desde una terminal normal corriendo `claude`, no desde el chat de la app de escritorio.
+- Corridas las 10 pruebas de `tests/TestRunner.luau` vía `execute_luau` desde esa sesión de terminal:
+  **10 OK, 0 fallos** (rarezas base suman 100 %, `Odds.forLuck` suma 100 % para toda suerte, más suerte
+  nunca baja la probabilidad de Legendario, Huevo Estelar con mínimo Raro y pity a Legendario, mutaciones
+  suman 100 %, `WeightedRandom` respeta pesos en 10.000 tiradas ±1,5 %, medidor en rango [0,1] con
+  multiplicador correcto, `NumberFormat`, 30 criaturas con zona/rareza válidas, zonas ordenadas por
+  distancia).
+- Rojo ya conectado y sincronizando el place completo: `ServerScriptService.Server` (16 descendientes)
+  y `StarterPlayerScripts.Client` (9 descendientes) están arriba. El place queda listo para playtest.
+
+**Siguiente paso sugerido (en orden):**
+1. Playtest manual en Studio (`start_stop_play` o manual) para validar el bucle central end-to-end.
+2. Empezar Semana 1 del calendario (`docs/CONTEXTO_PROYECTO.md` §6, 30 nov – 6 dic): bucle central
+   sólido, plataforma, HUD, efectos, sonidos.
+3. Seguir invitando al segundo cofundador como colaborador del repo (pendiente de la entrada anterior).
+
+---
+
 ## 2026-11-25 (4) — Repo en GitHub creado y sincronizado
 
 **Hecho:**

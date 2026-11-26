@@ -10,6 +10,72 @@
 
 ---
 
+## 2026-11-25 (11) — Sesión larga de pruebas dinámicas + 3 PR nuevos (#2, #3, #4)
+
+**Importante — Rojo sigue sin reconectar:** confirmado varias veces a lo largo de la sesión que el
+plugin de Rojo en Studio no se reconecta solo (se desconectó cuando terminó la sesión de terminal
+de la entrada (5)/(7)) y esta sesión no tiene forma de hacer clic en "Connect" de su panel (el MCP
+solo simula input de JUGADOR durante Play, no clics en la UI del editor). **Hace falta que alguien
+abra Studio y haga clic en "Connect" en el panel de Rojo** para poder probar de verdad dentro de
+Studio lo de abajo (correr `TestRunner.run()` real, ver el botón "Índice", confirmar la tienda
+oculta los primeros 3 minutos). Mientras tanto, el place abierto en Studio sigue en el estado de la
+entrada (5) — sin el PR #1 ni ninguno de los PR nuevos de hoy — y toda la lógica nueva se validó
+pegándola directo por `execute_luau` contra los módulos ya cargados, más `selene`/`stylua` limpios.
+
+**Hecho — jugué una partida real en Studio (Play, sin Rojo) para probar dinámicamente lo que la
+auditoría estática de la entrada (8) no cubría:** `RateLimiter` (ráfagas reales en 5 RemoteEvents
+distintos), `Validate` (claves con estilo SQL-injection, strings de 100 caracteres, tipos erróneos),
+`PolicyGate` (fallback restrictivo simulando que falla `GetPolicyInfoForPlayerAsync`), cooldowns con
+el reloj del servidor. **Nada crasheó, nada se saltó ningún límite.** Repetida también la auditoría
+de backdoors (`loadstring`, `getfenv`, `setfenv`, `_G`, `HttpService`, `InsertService`,
+`TeleportService`, `RemoteFunction`) con `script_grep` sobre el juego YA CARGADO en Studio, no solo
+el repo: limpio. Releí también el 100 % de `src/` (los 33 archivos) buscando discrepancias entre el
+código y `docs/CONTEXTO_PROYECTO.md`.
+
+**3 Pull Requests nuevos (ninguno mergeado todavía — cada uno necesita revisión del otro
+cofundador, como siempre; yo no mergeo PRs):**
+- [`#2`](https://github.com/ChinoDFO/terraform-toss/pull/2) `test/pruebas-dinamicas-servidor`: las
+  pruebas de arriba + 5 pruebas permanentes nuevas en `TestRunner.luau` (10→15) + un bug real pero
+  menor: `Formulas.luck()` no recortaba al tope de diseño (`Rarities.MAX_LUCK=5`). **Sin riesgo real
+  para la jugabilidad** porque `Odds.forLuck` ya tenía su propio recorte interno — el único efecto
+  era que el atributo `Luck` que ve el jugador en el HUD podía mostrar un número por encima del
+  tope documentado una vez hubiera más contenido. Arreglado reusando `Rarities.MAX_LUCK` (sin
+  inventar una constante nueva). De paso, agregué `.gitattributes` (stylua.toml ya pedía LF pero sin
+  `.gitattributes` Git en Windows revisa con CRLF, así que `stylua --check` marcaba sucio TODO el
+  repo sin ningún cambio real).
+- [`#3`](https://github.com/ChinoDFO/terraform-toss/pull/3) `feat/indice-criaturas` (**sale del #2,
+  mergear ese primero** — su prueba nueva da por hecho las 15 del #2): primer pedazo de "índice" de
+  la Semana 2 (`docs/CONTEXTO_PROYECTO.md` §6) — botón nuevo en el HUD que lista las 30 criaturas y
+  marca cuáles ya se descubrieron (nombre+rareza) o "???" si siguen bloqueadas. Un solo atributo
+  numérico nuevo (`DiscoveredMask`, un bit por criatura, decodificado con `bit32`) en vez de un
+  RemoteEvent nuevo.
+- [`#4`](https://github.com/ChinoDFO/terraform-toss/pull/4) `feat/ftue-tienda-delay`
+  (independiente de los otros dos, sale de `master`): la regla de FTUE "sin ventanas de compra los
+  primeros 3 minutos" (`docs/CONTEXTO_PROYECTO.md` §2) estaba documentada pero **no implementada**
+  — la tienda estaba disponible desde el segundo 0 de cada sesión. Arreglado servidor (rechaza
+  `RequestPurchase` con aviso amable) + cliente (botón oculto hasta que toca), mismo patrón de
+  `os.time()` que ya usa `BloomUntil`. Diario y Huevos gratis NO se tocaron (el FTUE documentado solo
+  habla de compras).
+
+**Pendiente / decisiones abiertas:**
+- Reconectar Rojo (clic manual, ver arriba) y correr `TestRunner.run()` real + un playtest de cada
+  PR nuevo antes de aprobarlos.
+- Los mismos pendientes de siempre: invitar al segundo cofundador (falta su usuario de GitHub),
+  nombre/reparto del equipo, revisar el PR #1 (HUD/sonidos — sigue abierto, intacto, sin tocar en
+  esta sesión).
+
+**Siguiente paso sugerido (en orden):**
+1. Abrir Studio y hacer clic en "Connect" en el panel de Rojo (es el plugin de Rojo, un panel
+   aparte del MCP de Studio — éste último ya está bien, no hace falta tocarlo).
+2. Con Rojo conectado: correr `TestRunner.run()` (debería dar 16/16 sumando el #2 y el #3) y hacer
+   un playtest manual de cada PR antes de aprobarlo (especialmente el botón "Índice" y que la
+   tienda tarde de verdad 3 minutos en aparecer).
+3. Revisar y mergear en el orden que tiene más sentido por las dependencias: `#2` → `#3` (depende
+   del #2) → `#4` (independiente) → `#1` (el más viejo, HUD/sonidos, independiente de todo esto).
+4. Seguir con el resto de la Semana 1/2 (`docs/CONTEXTO_PROYECTO.md` §6).
+
+---
+
 ## 2026-11-25 (10) — Confirmado: el MCP de Studio YA carga en esta sesión (app de escritorio) tras mover el directorio
 
 **Hecho:**

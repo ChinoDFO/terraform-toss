@@ -1,6 +1,6 @@
 # Herramientas del proyecto, misma versión para los dos cofundadores.
 # Para añadir o actualizar: `rokit add rojo-rbx/rojo` (fija la última versión aquí).
 [tools]
-rojo = "rojo-rbx/rojo@7.6.1"
+rojo = "rojo-rbx/rojo@7.7.1"
 stylua = "JohnnyMorganz/stylua@2.6.0"
 selene = "Kampfkarren/selene@0.32.0"

@@ -141,7 +141,9 @@ function PurchaseService.init()
 	Net.event("RequestPurchase").OnServerEvent:Connect(onRequestPurchase)
 
 	DataService.Loaded:Connect(function(player: Player, data: PlayerData)
-		local availableAt = os.time() + FTUE_SHOP_DELAY
+		-- FTUE de verdad: solo para quien nunca lanzó una cápsula (igual que la rareza
+		-- garantizada del primer lanzamiento). Quien vuelve a jugar ve la tienda de inmediato.
+		local availableAt = if data.totalThrows == 0 then os.time() + FTUE_SHOP_DELAY else 0
 		shopAvailableAt[player] = availableAt
 		player:SetAttribute("ShopAvailableAt", availableAt)
 		refreshPasses(player)

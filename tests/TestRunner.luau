@@ -16,6 +16,7 @@ local Creatures = require(ReplicatedStorage.Shared.Config.Creatures)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
 local Validate = require(ServerScriptService.Server.Util.Validate)
 local RateLimiter = require(ServerScriptService.Server.Util.RateLimiter)
+local CreatureService = require(ServerScriptService.Server.Services.CreatureService)
 
 local TestRunner = {}
 
@@ -149,6 +150,21 @@ test("Validate.oneOf rechaza fuera de lista blanca/tipo erróneo/demasiado largo
 	assert(Validate.oneOf(string.rep("a", 41), whitelist) == nil, "más de 40 caracteres debe rechazarse")
 	assert(Validate.oneOf("", whitelist) == nil, "string vacío debe rechazarse")
 	assert(Validate.oneOf("training", whitelist) == "training", "un valor de la lista debe pasar")
+end)
+
+test("CreatureService.discoveredMask: un bit por criatura, sin cruzarse", function()
+	local index = {}
+	index[Creatures.LIST[1].id] = true
+	index[Creatures.LIST[15].id] = true
+	index[Creatures.LIST[Creatures.COUNT].id] = true
+	local data = { index = index } :: any
+	local mask = CreatureService.discoveredMask(data)
+	assert(CreatureService.discoveredCount(data) == 3, "deberían ser 3 descubiertas")
+	assert(bit32.band(mask, bit32.lshift(1, 0)) ~= 0, "la 1ª debe estar marcada")
+	assert(bit32.band(mask, bit32.lshift(1, 14)) ~= 0, "la 15ª debe estar marcada")
+	assert(bit32.band(mask, bit32.lshift(1, Creatures.COUNT - 1)) ~= 0, "la última debe estar marcada")
+	assert(bit32.band(mask, bit32.lshift(1, 1)) == 0, "la 2ª NO debe estar marcada")
+	assert(bit32.band(mask, bit32.lshift(1, Creatures.COUNT - 2)) == 0, "la penúltima NO debe estar marcada")
 end)
 
 test("RateLimiter permite N por ventana y bloquea el resto", function()

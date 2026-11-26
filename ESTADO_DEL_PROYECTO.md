@@ -137,6 +137,58 @@ y confirmar que sigue en verde con todo junto.
 - Invitar al segundo cofundador (circular con la sección de arriba — falta su usuario).
 - Nombre definitivo del juego/estudio y reparto de ingresos.
 - Verificar en Creator Hub el precio de crear un grupo y los requisitos de Kids & Select vigentes.
+- El place de Studio **nunca se ha guardado** (ni a archivo ni a Roblox) — Claude no puede hacer
+  ese primer guardado solo, hace falta `File > Save to File` (o `Save to Roblox`) una vez, a mano.
+  No es urgente: todo lo importante vive en `src/` (git), no en el place — pero conviene hacerlo
+  para no perder ajustes manuales que se hagan directo en Studio (cámara, Terreno, etc.).
+
+---
+
+## ✅ Pruebas humanas pendientes (antes de aprobar los PR)
+
+Todo lo de aquí necesita ojos/oídos de una persona — nada de esto se puede confirmar solo con
+`TestRunner` ni con capturas de pantalla hechas por Claude (ya se probó todo lo automatizable;
+esto es lo que falta). Hacerlo con Rojo conectado (sección de arriba) y Play en Studio, revisando
+cada PR por separado o todos juntos después de mergear.
+
+**PR #1 — Sonidos y HUD**
+- [ ] Jugar varios lanzamientos y escuchar: sonido de carga (tono que sube), de soltar, de
+  aterrizaje. ¿Se sienten bien? ¿Algún volumen muy alto o muy bajo?
+- [ ] Sacar un Épico/Legendario y un Bloom o Planeta restaurado (o forzarlo) para oír esos sonidos
+  especiales al menos una vez cada uno.
+- [ ] Con 2+ jugadores lanzando a la vez: ¿los sonidos se pisan mal entre sí?
+- [ ] Mirar el HUD con el porcentaje del planeta muy bajo (recién empezado): ¿se lee bien el
+  "0.03 %" y se ve razonable la barra con ancho mínimo?
+
+**PR #3 — Índice de criaturas**
+- [ ] Abrir el botón "Índice": ¿se lee bien?, ¿el scroll funciona bien con las 30 criaturas?
+- [ ] Confirmar que el botón "Índice" no se encima con otros botones del HUD (probar también en
+  una ventana angosta, tipo celular, si se puede).
+
+**PR #4 — Tienda oculta los primeros 3 minutos**
+- [ ] Entrar y jugar normal durante 3 minutos reales: el botón "Tienda" no debe estar desde el
+  inicio, y debe aparecer solo (sin recargar nada) cuando toca.
+- [ ] Intentar comprar algo antes de esos 3 minutos si encuentran la forma: debe salir el aviso
+  amable, nunca procesar nada.
+- [ ] Pendiente para más adelante (no se pudo probar en Studio: los datos de prueba viven en
+  memoria y se borran al salir de Play): con una build publicada o datos reales, un jugador que
+  YA jugó antes debería ver la tienda de inmediato al volver a entrar, no esperar otros 3 minutos.
+
+**PR #5 — Letreros de zona (placeholder)**
+- [ ] Caminar por el planeta: ¿los 6 letreros se leen a buena distancia?, ¿se encimen entre sí o
+  con el HUD?
+
+**PR #6 — Jardín 3D (placeholder)**
+- [ ] Buscar el jardín propio (lejos del planeta, alrededor en círculo) y confirmar que los cubos
+  se ven razonables, no quedan enterrados ni flotando raro.
+- [ ] Con 2+ jugadores a la vez: confirmar que los jardines de cada uno no se superponen.
+
+**General (nada de esto se probó con más de 1 jugador real — Claude solo puede controlar uno)**
+- [ ] Combo: 2 jugadores lanzando a menos de 30 studs de distancia y con menos de 1 s de
+  diferencia — ¿se siente el bonus de distancia/suerte?
+- [ ] Sensación general de ritmo jugando varios minutos seguidos (la entrada (8) de la bitácora ya
+  pedía esto para el balance del planeta; sigue pendiente).
+- [ ] Consola de Studio sin errores nuevos durante una sesión larga con 2+ jugadores reales.
 
 ---
 

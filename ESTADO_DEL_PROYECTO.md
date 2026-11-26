@@ -10,16 +10,21 @@
 
 ---
 
-## 2026-11-25 (3) — Primer commit hecho
+## 2026-11-25 (4) — Repo en GitHub creado y sincronizado
 
 **Hecho:**
-- Primer commit del repo: `080d781` — "chore: primer commit del starter + tooling (Rokit, StyLua,
-  Selene)". Incluye todo el starter, el `rokit.toml` completo, el formateo de StyLua aplicado y
-  esta bitácora. **Todavía NO hay remoto en GitHub** (el repo sigue siendo solo local).
+- Se instaló GitHub CLI (`gh` 2.105.0, vía winget) y el usuario inició sesión con su cuenta
+  (`ChinoDFO`) vía `gh auth login` (dispositivo/navegador).
+- Repo creado en GitHub: **privado**, bajo la cuenta personal del usuario —
+  `https://github.com/ChinoDFO/terraform-toss`. Remoto `origin` configurado, rama `master`
+  pusheada y en seguimiento de `origin/master`. Commits `080d781` y `d1e6c6b` ya están en remoto.
+- **Pendiente:** invitar al segundo cofundador como colaborador del repo (Settings → Collaborators
+  en GitHub), y decidir si en algún momento se mueve a una organización/grupo en vez de la cuenta
+  personal.
 
 **Siguiente paso sugerido (en orden):**
-1. Decidir nombre/reparto de equipo (pendiente de los cofundadores, ver entrada de abajo).
-2. Crear repo privado en GitHub, hacer `git remote add` + `push`, invitar al otro cofundador.
+1. Invitar al otro cofundador como colaborador del repo.
+2. Decidir nombre/reparto de equipo (pendiente de los cofundadores, ver entrada de abajo).
 3. Abrir Studio, activar el MCP, confirmar conexión, correr las 10 pruebas de `TestRunner.luau`.
 4. Seguir con la Semana 1 del calendario (`docs/CONTEXTO_PROYECTO.md` §6).
 

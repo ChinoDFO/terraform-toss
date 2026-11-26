@@ -10,6 +10,47 @@
 
 ---
 
+## 2026-11-26 (14) — Sonido del PR #1 confirmado + 2 placeholders de Semana 2 (PR #5, #6)
+
+**Pregunta del usuario: "¿por qué ya no suena al lanzar?"** No era un bug — Studio estaba
+sincronizado con `master`, que nunca tuvo los sonidos (viven solo en el PR #1, sin mergear).
+Cambié a esa rama y confirmé en vivo (capturé el `Sound` de "Release" con `IsPlaying = true`
+justo al soltar, sin errores en consola): el PR #1 funciona bien, de verdad, por primera vez.
+También probé `ClaimDaily` ahí: racha 0→1, $50, notificación correcta, segundo intento el mismo
+día correctamente ignorado.
+
+**Evaluación de lo que falta de Semana 1/2:** "bucle central sólido" y "sonidos/efectos" ya están
+(este último esperando revisión en el PR #1); "plataforma" es de Dev B (mapa/arte, no código).
+De Semana 2 faltaban "jardín 3D" y "zonas visibles" — ambos dependen del mapa/arte real. Le
+pregunté al usuario cómo seguir; eligió: **placeholders simples y claramente temporales**, para
+que Dev B tenga algo sobre qué iterar.
+
+**2 PR nuevos, ambos placeholders explícitos (sin arte final, solo formas simples):**
+- [`#5`](https://github.com/ChinoDFO/terraform-toss/pull/5) `feat/zonas-visibles-placeholder`:
+  un letrero flotante (`BillboardGui`) con el nombre de cada zona, coloreado igual que sus
+  celdas. Verificado en vivo (texto y color exactos vía `inspect_instance`).
+- [`#6`](https://github.com/ChinoDFO/terraform-toss/pull/6) `feat/jardin-3d-placeholder`: un
+  `GardenVisualService` nuevo que dibuja un cubo de color por criatura del jardín de cada
+  jugador (coloreado por rareza, igual que el HUD/Índice), en un punto fijo alrededor del
+  planeta. Se sincroniza desde `CreatureService.grant` y desde la carga inicial.
+
+**Bug real encontrado y arreglado en vivo (PR #6):** usé `folder:ClearChildren()`, que no existe
+en Roblox (el método real es `ClearAllChildren`) — crasheaba la sincronización del jardín cada
+vez que se llamaba. `selene`/`stylua` no lo detectan (ninguno valida nombres de métodos de la
+API de Roblox); solo lo agarré porque lo probé en Play real. **Esto confirma, otra vez, que
+probar en vivo dentro de Studio encuentra cosas que el lint no puede.**
+
+**Estado de los PR (6 abiertos, ninguno mergeado todavía):**
+`#1` HUD/sonidos · `#2` pruebas+suerte · `#3` índice (depende del #2) · `#4` tienda FTUE ·
+`#5` zonas visibles (placeholder) · `#6` jardín 3D (placeholder). Los últimos 4 ya están
+verificados en vivo dentro de Studio con Rojo conectado.
+
+**Siguiente paso sugerido:** con 6 PR abiertos, probablemente conviene que el equipo se ponga a
+revisar/mergear antes de seguir acumulando más — no hay nada técnico bloqueando, es cuestión de
+revisión humana.
+
+---
+
 ## 2026-11-26 (13) — Revisión de cumplimiento contra el plan (CLAUDE.md + docs) — 1 corrección real
 
 A pedido del usuario, releí los 3 PR nuevos (#2, #3, #4) línea por línea contra las reglas no

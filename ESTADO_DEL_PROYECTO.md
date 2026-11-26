@@ -10,6 +10,182 @@
 
 ---
 
+## 🧭 Si acabas de abrir esto (para Claude)
+
+1. Lee esta sección y las dos siguientes (conectar Studio, GitHub) antes de tocar nada.
+2. Lee `CLAUDE.md` (reglas técnicas obligatorias) y, si hace falta contexto de diseño/negocio,
+   `docs/CONTEXTO_PROYECTO.md`.
+3. Si es la primera vez que hablas con esta persona en este proyecto (o simplemente parece que no
+   ha visto esto todavía), dale un resumen corto **antes** de ponerte a trabajar: qué se hizo en la
+   entrada más reciente de abajo, cuántos PR siguen abiertos y sin revisar, y cuál es el siguiente
+   paso sugerido (sección "Qué sigue" más abajo). No hace falta leerle el archivo entero — con 4-6
+   líneas alcanza.
+4. No asumas que lo que dice una entrada vieja sigue siendo cierto si algo más nuevo lo contradice
+   (por ejemplo: el estado de los PR cambia en cuanto alguien los revisa/mergea). Si tienes `gh`
+   disponible, `gh pr list` y `gh pr view <n>` te dan el estado real en vez de lo que diga aquí.
+
+---
+
+## 🔌 Cómo conectar Claude Code a Roblox Studio
+
+Esto hay que hacerlo **una vez por máquina** (cada cofundador, en su propia compu). Sin esto,
+Claude solo puede editar archivos de texto — no puede ejecutar Luau de verdad, hacer playtest, ni
+ver la consola de Studio.
+
+1. **Instalar Rokit** (administra `rojo`/`selene`/`stylua` con la misma versión para los dos):
+   `winget install Rojo.Rokit`. Después, dentro de la carpeta del repo: `rokit install`.
+2. **Abrir Roblox Studio** con el place de este proyecto. Activar el MCP integrado de Studio:
+   Assistant → ⋯ → **Manage MCP Servers** → activar **"Enable Studio as MCP server"**.
+3. **Registrar el servidor MCP en Claude Code** (una terminal normal, parada **dentro de la
+   carpeta del repo** — esto importa, ver el punto 4):
+   ```
+   claude mcp add Roblox_Studio -- cmd.exe /c %LOCALAPPDATA%\Roblox\mcp.bat
+   ```
+   (Esto es para Windows. En Mac la ruta del bridge de Roblox es otra — si tu cofundador usa Mac,
+   que revise la documentación de "Roblox Studio Assistant/MCP" en vez de copiar esto literal.)
+4. **Importante — por qué a veces "no aparecen las herramientas":** este registro queda guardado
+   para la ruta EXACTA de la carpeta donde corriste el comando. Si abres Claude Code (terminal o
+   app de escritorio) parado en una carpeta distinta (p. ej. tu carpeta de usuario en vez de la del
+   repo), las herramientas de Studio simplemente no van a estar ahí — no es que esté roto, es que
+   esa sesión no está "parada" en el lugar correcto. Si usas la app de escritorio de Claude Code,
+   puedes mover una sesión ya abierta a la carpeta correcta sin reiniciarla.
+5. **Las versiones de Rojo tienen que coincidir.** El plugin de Rojo *dentro* de Studio se
+   autoactualiza solo (viene de la Toolbox, no de Rokit); el `rojo` de línea de comandos que instala
+   Rokit NO se actualiza solo. Si al hacer clic en "Connect" en el panel de Rojo (dentro de Studio)
+   sale un error como `attempt to index number with 'protocolVersion'`, es exactamente esto: compara
+   `rojo --version` (en una terminal) contra el número que muestra el panel de Rojo arriba del todo
+   (p. ej. "Rojo 7.7.1"), edita la línea `rojo = "rojo-rbx/rojo@X.Y.Z"` en `rokit.toml` para que
+   coincida, y corre `rokit install` de nuevo.
+6. **Arrancar Rojo:** `rojo serve default.project.json` (puerto 34872 por defecto) desde la raíz
+   del repo. Claude puede arrancarlo solo en segundo plano si se lo pides.
+7. **En Studio:** panel de Rojo → **Connect**. La primera vez puede aparecer un panel "View
+   changes" pidiendo que aceptes el sync a mano (un botón ✓ arriba a la derecha) — acéptalo, y de
+   paso entra a **Settings** (al lado de "Disconnect") y pon la confirmación en **automática**, así
+   no hay que repetir ese clic cada vez que Claude cambia de rama para probar algo.
+8. **Detalle para Claude, no para el humano:** si acabas de pedirle a Rojo que sincronice un
+   cambio y corres algo como `TestRunner.run()` en modo **Edit** justo después, puede devolver
+   resultados viejos — Luau cachea `require()` por instancia de script y no se invalida solo porque
+   el `Source` cambió. Para una lectura de verdad fresca, entra a modo **Play**
+   (`start_stop_play`) y corre la prueba ahí.
+
+Con esto conectado, las herramientas disponibles son (entre otras): `execute_luau`,
+`start_stop_play`, `get_console_output`, `screen_capture`, `search_game_tree`, `inspect_instance`,
+`script_grep`/`script_read`/`script_search`, `user_mouse_input`/`user_keyboard_input`, y las de
+generación (`generate_mesh`, `generate_material`, `generate_texture`, etc.).
+
+---
+
+## 👥 GitHub: invitar a tu cofundador y poder clonar/editar el proyecto
+
+El repo (`ChinoDFO/terraform-toss`) es **privado** — sin invitación, tu cofundador no puede verlo
+ni clonarlo, aunque tenga el link.
+
+### Invitarlo (lo hace quien tiene la cuenta `ChinoDFO`)
+1. Conseguir su **usuario de GitHub** (sigue pendiente — nadie lo tiene anotado todavía).
+2. Ir a <https://github.com/ChinoDFO/terraform-toss/settings/access> → **Add people** → escribir
+   su usuario o correo → elegir el rol **Write** (puede clonar, hacer push a sus propias ramas y
+   abrir PRs; no puede borrar el repo ni cambiar su configuración) → enviar la invitación.
+3. Tu cofundador recibe un correo/notificación de GitHub y tiene que **aceptar la invitación**
+   (desde el correo, o en <https://github.com/ChinoDFO/terraform-toss/invitations>).
+
+### Cómo baja el proyecto (ya aceptada la invitación)
+- **Más fácil, sin terminal:** [GitHub Desktop](https://desktop.github.com) → iniciar sesión con
+  su cuenta de GitHub → "Clone a repository from the Internet" → buscar `ChinoDFO/terraform-toss`
+  → elegir una carpeta → Clone. Después puede sincronizar cambios (subir/bajar) con un botón, sin
+  usar la terminal para nada.
+- **Con terminal:** `git clone https://github.com/ChinoDFO/terraform-toss.git`
+- **Evitar** el botón "Code → Download ZIP" si va a editar algo: baja una copia suelta, sin
+  historial de git, y no se puede subir de vuelta nada desde ahí. Sirve solo para mirar, no para
+  trabajar.
+
+### Después de clonar
+1. Seguir la sección "Cómo conectar Claude Code a Roblox Studio" de arriba (Rokit, Studio, MCP).
+2. Leer `CLAUDE.md` y `docs/CONTEXTO_PROYECTO.md` antes de tocar código.
+3. Nunca hacer push directo a `master`/`main` con código de juego: una rama por tarea, PR revisado
+   por el otro cofundador (ver "Cómo trabajar" en `CLAUDE.md`).
+
+---
+
+## 🗺️ Qué sigue (actualizado 2026-11-26)
+
+**6 Pull Requests abiertos, ninguno mergeado todavía** — esto es lo primero que hay que atender:
+
+| PR | Qué es | Depende de |
+|---|---|---|
+| [`#1`](https://github.com/ChinoDFO/terraform-toss/pull/1) | Sonidos + efectos del lanzamiento, HUD con 2 decimales | — |
+| [`#2`](https://github.com/ChinoDFO/terraform-toss/pull/2) | Pruebas dinámicas del servidor + arreglo del tope de suerte | — |
+| [`#3`](https://github.com/ChinoDFO/terraform-toss/pull/3) | Índice de criaturas (Semana 2) | `#2` (mergear ese primero) |
+| [`#4`](https://github.com/ChinoDFO/terraform-toss/pull/4) | Tienda oculta los primeros 3 minutos (FTUE) | — |
+| [`#5`](https://github.com/ChinoDFO/terraform-toss/pull/5) | Zonas visibles (placeholder: letreros flotantes) | — |
+| [`#6`](https://github.com/ChinoDFO/terraform-toss/pull/6) | Jardín 3D (placeholder: cubos de color) | — |
+
+Orden sugerido para revisar/mergear: `#2` → `#3` → el resto (`#1`, `#4`, `#5`, `#6`) en cualquier
+orden, son independientes entre sí. Todos (salvo `#1`, hecho en otra sesión) quedaron probados de
+verdad dentro de Studio, no solo leídos — ver la entrada de hoy más abajo para el detalle de cada
+uno. Después de mergear, alguien con Rojo conectado debería correr `TestRunner.run()` una vez más
+y confirmar que sigue en verde con todo junto.
+
+**Roadmap** (`docs/CONTEXTO_PROYECTO.md` §6, fuente de verdad si esto queda desactualizado):
+- **Semana 1** (30 nov – 6 dic): bucle central, HUD, efectos, sonidos → listo, esperando merge de
+  los PR de arriba. Falta "plataforma" (mapa real) — es de Dev B, no de código.
+- **Semana 2** (7–13 dic): índice ✓ (PR #3), 30 criaturas ✓ (ya existían como datos), zonas
+  visibles ✓ placeholder (PR #5), jardín 3D ✓ placeholder (PR #6), FTUE ✓ (PR #4). Falta que Dev B
+  reemplace los dos placeholders por arte/mapa de verdad cuando los tenga.
+- **Semana 3 y 4**: sin empezar (tienda real en Creator Hub, pruebas, publicación).
+
+**Pendientes de equipo (no técnicos, de siempre):**
+- Invitar al segundo cofundador (circular con la sección de arriba — falta su usuario).
+- Nombre definitivo del juego/estudio y reparto de ingresos.
+- Verificar en Creator Hub el precio de crear un grupo y los requisitos de Kids & Select vigentes.
+
+---
+
+## 2026-11-26 (15) — Cierre del día: resumen de toda la sesión
+
+**En una frase:** se diagnosticó y arregló por qué Claude no podía conectarse de verdad a Studio
+(tres problemas distintos, uno detrás de otro), y con eso ya funcionando se probaron y ampliaron 6
+áreas del juego — todo quedó en 6 Pull Requests, ninguno mergeado, listos para revisión humana.
+
+**El hilo completo de la sesión, en orden:**
+1. **Diagnóstico #1:** esta sesión (app de escritorio) no tenía las herramientas de Studio porque
+   había arrancado parada en la carpeta de usuario en vez de en la del repo (ver entradas 9-10).
+   Solucionado moviendo el directorio de la sesión.
+2. **Diagnóstico #2:** una vez movida, el clic en "Connect" del plugin de Rojo fallaba con un error
+   de protocolo — versión del plugin de Studio (7.7.1, autoactualizado solo) desincronizada de la
+   versión del CLI fijada en `rokit.toml` (7.6.1). Arreglado actualizando `rokit.toml` a 7.7.1.
+3. **Diagnóstico #3:** con las versiones iguales, "Connect" funcionaba pero los cambios de rama no
+   se reflejaban solos en Studio — Rojo tenía la confirmación manual de cada sync activada. El
+   usuario la puso en automática. (Los tres diagnósticos quedaron resumidos arriba en "Cómo
+   conectar Claude Code a Roblox Studio" para que no haya que repetir la investigación.)
+4. Con todo eso resuelto, se hizo una partida real en Studio (Play) para probar en vivo lo que la
+   auditoría estática de sesiones anteriores no cubría: límites de velocidad, validación de
+   entradas, política de contenido aleatorio pagado, los 10 RemoteEvents del juego con entradas
+   inválidas/de ráfaga. Nada falló. Se encontró y arregló un bug menor (el tope de suerte de
+   diseño no se aplicaba al número que ve el jugador) y se agregaron 5 pruebas permanentes nuevas
+   → **PR #2**.
+5. Se construyó el **Índice de criaturas** (Semana 2) → **PR #3**, probado jugando: se actualiza
+   solo al descubrir una criatura.
+6. Revisando el código a fondo se encontró que la regla de diseño "sin tienda los primeros 3
+   minutos" nunca se había programado → **PR #4**. En una revisión de cumplimiento posterior se
+   encontró y corrigió que ese retraso debía ser solo de la primera sesión de cada cuenta, no de
+   todas (igual que la regla del primer lanzamiento garantizado).
+7. El usuario preguntó por qué ya no sonaba al lanzar: no era un bug, el PR #1 (sonidos) nunca se
+   había mergeado y Studio estaba sincronizado con una rama sin él. Se confirmó en vivo, por
+   primera vez, que el PR #1 sí funciona.
+8. A pedido del usuario, se construyeron dos **placeholders** explícitamente temporales de
+   Semana 2 (zonas visibles con letreros flotantes, jardín 3D con cubos de color por criatura) →
+   **PR #5 y #6**. Se encontró y arregló un bug real en el camino (`ClearChildren` no existe en
+   Roblox; es `ClearAllChildren`) gracias a probarlo en Play real — ni `selene` ni `stylua` lo
+   detectan.
+
+**Dónde quedó todo:** 6 PR abiertos (`#1` al `#6`), ninguno mergeado — ver la tabla en "Qué sigue"
+más arriba para el detalle y el orden sugerido. Todo lo nuevo de hoy (`#2`–`#6`) quedó probado de
+verdad dentro de Studio, no solo leído. Nada de lo que se hizo rompe ninguna regla de
+`CLAUDE.md` ni reabre ninguna decisión congelada de `docs/CONTEXTO_PROYECTO.md` §9 (se revisó
+explícitamente, ver entrada 13).
+
+---
+
 ## 2026-11-26 (14) — Sonido del PR #1 confirmado + 2 placeholders de Semana 2 (PR #5, #6)
 
 **Pregunta del usuario: "¿por qué ya no suena al lanzar?"** No era un bug — Studio estaba

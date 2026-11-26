@@ -10,6 +10,50 @@
 
 ---
 
+## 2026-11-26 (12) — Rojo reconectado de verdad + los 3 PR (#2, #3, #4) verificados dentro de Studio
+
+**Lo que pasó, en orden (para la próxima vez que esto se rompa):**
+1. El clic en "Connect" del plugin de Rojo daba un error de protocolo
+   (`ApiContext:28: attempt to index number with 'protocolVersion'`). Causa real: el plugin de
+   Rojo en Studio se había auto-actualizado solo a **7.7.1** (los plugins de la Toolbox se
+   actualizan aparte del CLI), mientras `rokit.toml` seguía fijando el CLI en 7.6.1. Arreglado:
+   `rokit.toml` → `7.7.1` + `rokit install` + reiniciar `rojo serve` (commit en `master`). **Si
+   esto vuelve a pasar:** comparar la versión del CLI (`rojo --version`) contra la del panel de
+   Rojo en Studio (dice "Rojo X.Y.Z" arriba del todo) y fijar la misma en `rokit.toml`.
+2. Con las versiones ya iguales, "Connect" funcionó, pero el contenido no se actualizaba al
+   cambiar de rama: Rojo tenía la confirmación manual de cada sync activada (un panel "View
+   changes" con un botón ✓ que hay que apretar a mano). El usuario lo aceptó una vez y después puso
+   la confirmación en **automática** desde el panel de Rojo → "Settings", así no hace falta
+   repetir el clic cada vez que se cambia de rama.
+3. **Para la próxima sesión que use el MCP de Studio:** correr `TestRunner.run()` en modo **Edit**
+   justo después de que Rojo sincronice un cambio NO sirve para confirmar nada — Luau cachea el
+   resultado de `require()` por instancia de script y no se invalida solo cuando Rojo actualiza el
+   `Source`. Hay que entrar a modo **Play** (`start_stop_play`) para una lectura de verdad fresca.
+
+**Con eso resuelto, verifiqué los 3 PR de la entrada (11) de punta a punta dentro de Studio (modo
+Play real, no solo `execute_luau` por fuera como hasta ahora):**
+- PR #2: `TestRunner.run()` → **15/15**.
+- PR #3 (Índice): `TestRunner.run()` → **16/16**. Playtest real: abrí el índice (0/30), lancé una
+  cápsula, y el panel se actualizó SOLO (sin recargar nada) mostrando "Musgolín (Poco común)" en
+  verde y el contador en 1/30.
+- PR #4 (tienda a los 3 min): playtest real confirmando que el botón "Tienda" NO aparece al entrar
+  (solo "Diario") y que un intento de compra inmediato da el aviso correcto
+  ("La tienda se desbloquea a los pocos minutos...") en vez de procesar nada —
+  `ShopAvailableAt` quedó ~180 s en el futuro, confirmado con el reloj real del servidor.
+
+Actualicé la descripción de los 3 PR en GitHub con esta confirmación (ya no dicen "pendiente de
+probar en Studio").
+
+**Siguiente paso sugerido (en orden):**
+1. Revisar y mergear en el orden que tiene sentido por las dependencias: `#2` → `#3` (depende del
+   #2) → `#4` (independiente) → `#1` (el más viejo, HUD/sonidos — sigue abierto, sin tocar, sigue
+   pendiente de revisión).
+2. Seguir con el resto de la Semana 1/2 (`docs/CONTEXTO_PROYECTO.md` §6).
+3. Los de siempre: invitar al segundo cofundador (falta su usuario de GitHub), nombre/reparto del
+   equipo.
+
+---
+
 ## 2026-11-25 (11) — Sesión larga de pruebas dinámicas + 3 PR nuevos (#2, #3, #4)
 
 **Importante — Rojo sigue sin reconectar:** confirmado varias veces a lo largo de la sesión que el

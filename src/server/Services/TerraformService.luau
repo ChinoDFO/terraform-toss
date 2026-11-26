@@ -101,6 +101,44 @@ local function buildVisual()
 	newFolder.Parent = Workspace
 end
 
+-- PLACEHOLDER de "zonas visibles" (Semana 2): un letrero flotante con el nombre de cada zona,
+-- para que se distingan mientras Dev B diseña el mapa/arte real en Studio.
+local function buildZoneLabels()
+	local existing = Workspace:FindFirstChild("ZoneLabels")
+	if existing then
+		existing:Destroy()
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "ZoneLabels"
+	for _, zone in Zones.ZONES do
+		local centerRow = (zone.id - 1) * ROWS_PER_ZONE + ROWS_PER_ZONE / 2
+		local marker = Instance.new("Part")
+		marker.Name = zone.name
+		marker.Anchored = true
+		marker.CanCollide = false
+		marker.CanQuery = false
+		marker.CanTouch = false
+		marker.Transparency = 1
+		marker.Size = Vector3.new(1, 1, 1)
+		marker.Position = worldPositionOf(centerRow, LOGICAL / 2) + Vector3.new(0, 15, 0)
+		local billboard = Instance.new("BillboardGui")
+		billboard.Size = UDim2.fromOffset(240, 50)
+		billboard.AlwaysOnTop = true
+		billboard.Parent = marker
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.fromScale(1, 1)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.GothamBlack
+		label.Text = zone.name
+		label.TextScaled = true
+		label.TextColor3 = zone.color
+		label.TextStrokeTransparency = 0.4
+		label.Parent = billboard
+		marker.Parent = folder
+	end
+	folder.Parent = Workspace
+end
+
 local function resetGrid()
 	aliveCount = 0
 	nextMilestone = 1
@@ -219,6 +257,7 @@ function TerraformService.init()
 	state:SetAttribute("PlanetPercent", 0)
 	state:SetAttribute("BloomUntil", 0)
 	buildVisual()
+	buildZoneLabels()
 	resetGrid()
 end
 

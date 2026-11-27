@@ -27,6 +27,8 @@ local visualParts: { BasePart } = {}
 local origin = Vector3.new(0, 0, 120)
 local rng = Random.new()
 local onRestored: { (number) -> () } = {}
+local onCell: { (number, Vector3) -> () } = {}
+local onReset: { () -> () } = {}
 
 local TerraformService = {}
 
@@ -101,6 +103,44 @@ local function buildVisual()
 	newFolder.Parent = Workspace
 end
 
+-- PLACEHOLDER de "zonas visibles" (Semana 2): un letrero flotante con el nombre de cada zona,
+-- para que se distingan mientras Dev B diseña el mapa/arte real en Studio.
+local function buildZoneLabels()
+	local existing = Workspace:FindFirstChild("ZoneLabels")
+	if existing then
+		existing:Destroy()
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "ZoneLabels"
+	for _, zone in Zones.ZONES do
+		local centerRow = (zone.id - 1) * ROWS_PER_ZONE + ROWS_PER_ZONE / 2
+		local marker = Instance.new("Part")
+		marker.Name = zone.name
+		marker.Anchored = true
+		marker.CanCollide = false
+		marker.CanQuery = false
+		marker.CanTouch = false
+		marker.Transparency = 1
+		marker.Size = Vector3.new(1, 1, 1)
+		marker.Position = worldPositionOf(centerRow, LOGICAL / 2) + Vector3.new(0, 15, 0)
+		local billboard = Instance.new("BillboardGui")
+		billboard.Size = UDim2.fromOffset(240, 50)
+		billboard.AlwaysOnTop = true
+		billboard.Parent = marker
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.fromScale(1, 1)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.GothamBlack
+		label.Text = zone.name
+		label.TextScaled = true
+		label.TextColor3 = zone.color
+		label.TextStrokeTransparency = 0.4
+		label.Parent = billboard
+		marker.Parent = folder
+	end
+	folder.Parent = Workspace
+end
+
 local function resetGrid()
 	aliveCount = 0
 	nextMilestone = 1
@@ -116,6 +156,9 @@ local function resetGrid()
 	end
 	for _, part in visualParts do
 		part.Color = DEAD_COLOR
+	end
+	for _, callback in onReset do
+		callback()
 	end
 end
 
@@ -184,6 +227,9 @@ function TerraformService.applyThrow(zone: number, cells: number): (number, Vect
 		changed += 1
 		local row, col = rowColOf(index)
 		touched[visualIndexOf(row, col)] = true
+		for _, callback in onCell do
+			callback(band, worldPositionOf(row, col))
+		end
 		if landing == nil then
 			landing = worldPositionOf(row, col)
 		end
@@ -205,6 +251,22 @@ function TerraformService.planetMultiplier(): number
 	return 1 + 0.1 * (planet - 1)
 end
 
+-- Centro del planeta (Workspace.PlanetOrigin si existe). Otros servicios lo usan para colocar
+-- cosas relativas al planeta sin duplicar la posición.
+function TerraformService.getOrigin(): Vector3
+	return origin
+end
+
+-- Avisa de cada celda restaurada (franja y posición en el mundo). Lo usa la escenografía.
+function TerraformService.onCellRestored(callback: (number, Vector3) -> ())
+	table.insert(onCell, callback)
+end
+
+-- Avisa cuando la cuadrícula se reinicia (siguiente planeta).
+function TerraformService.onGridReset(callback: () -> ())
+	table.insert(onReset, callback)
+end
+
 function TerraformService.onPlanetRestored(callback: (number) -> ())
 	table.insert(onRestored, callback)
 end
@@ -219,6 +281,7 @@ function TerraformService.init()
 	state:SetAttribute("PlanetPercent", 0)
 	state:SetAttribute("BloomUntil", 0)
 	buildVisual()
+	buildZoneLabels()
 	resetGrid()
 end
 

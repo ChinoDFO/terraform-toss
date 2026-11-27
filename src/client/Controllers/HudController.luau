@@ -14,6 +14,7 @@ local Mutations = require(ReplicatedStorage.Shared.Config.Mutations)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
 local Ui = require(script.Parent.Parent.UI.Ui)
 local UIPool = require(script.Parent.Parent.UI.UIPool)
+local Sfx = require(script.Parent.Parent.UI.Sfx)
 
 local player = Players.LocalPlayer
 local HudController = {}
@@ -164,8 +165,12 @@ local function build()
 		local pct = tonumber(state:GetAttribute("PlanetPercent")) or 0
 		local planet = tonumber(state:GetAttribute("Planet")) or 1
 		local bloomLeft = (tonumber(state:GetAttribute("BloomUntil")) or 0) - os.time()
-		fill.Size = UDim2.fromScale(math.clamp(pct / 100, 0, 1), 1)
-		planetText.Text = string.format("Planeta %d · %.1f %%", planet, pct)
+		-- 9.216 celdas lógicas (96x96): un lanzamiento Común sube ~0,01 %. Un ancho mínimo visible y
+		-- más decimales evitan que el jugador sienta que "no sirvió de nada".
+		local fillFraction = if pct > 0 then math.max(pct / 100, 0.01) else 0
+		fill.Size = UDim2.fromScale(math.clamp(fillFraction, 0, 1), 1)
+		local pctText = if pct < 1 then string.format("%.2f", pct) else string.format("%.1f", pct)
+		planetText.Text = string.format("Planeta %d · %s %%", planet, pctText)
 			.. (if bloomLeft > 0 then " · BLOOM " .. NumberFormat.duration(bloomLeft) else "")
 	end
 
@@ -202,6 +207,9 @@ function HudController.init()
 			text = "¡COMBO! " .. text
 		end
 		HudController.toast(text, rarity and rarity.color or nil)
+		if result.rarity == "Epico" or result.rarity == "Legendario" then
+			Sfx.play("RareReveal")
+		end
 	end)
 
 	Net.event("Notify").OnClientEvent:Connect(function(kind: any, data: any)
@@ -213,8 +221,10 @@ function HudController.init()
 				string.format("🌸 ¡BLOOM al %d %%! x2 dinero y +suerte para todos", data.percent),
 				Color3.fromRGB(255, 150, 220)
 			)
+			Sfx.play("Bloom")
 		elseif kind == "PlanetRestored" then
 			HudController.toast("🌍 ¡PLANETA RESTAURADO! Recompensa para todos", Color3.fromRGB(120, 255, 140))
+			Sfx.play("PlanetRestored")
 		elseif kind == "Offline" then
 			HudController.toast("Mientras no estabas tu jardín generó $" .. NumberFormat.short(data.amount))
 		elseif kind == "Daily" then

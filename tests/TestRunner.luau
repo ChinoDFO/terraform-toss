@@ -3,17 +3,24 @@
 -- Ejecútalas desde Claude con la herramienta MCP `execute_luau` (modo Edit):
 --   return require(game:GetService("ServerStorage").Tests.TestRunner).run()
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 
 local Odds = require(ReplicatedStorage.Shared.Util.Odds)
 local Meter = require(ReplicatedStorage.Shared.Util.Meter)
 local NumberFormat = require(ReplicatedStorage.Shared.Util.NumberFormat)
 local WeightedRandom = require(ReplicatedStorage.Shared.Util.WeightedRandom)
+local Formulas = require(ReplicatedStorage.Shared.Util.Formulas)
 local Rarities = require(ReplicatedStorage.Shared.Config.Rarities)
 local Mutations = require(ReplicatedStorage.Shared.Config.Mutations)
 local Creatures = require(ReplicatedStorage.Shared.Config.Creatures)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
 local Quests = require(ReplicatedStorage.Shared.Config.Quests)
 local Progression = require(ServerScriptService.Server.Util.Progression)
+local Ambience = require(ReplicatedStorage.Shared.Config.Ambience)
+local CreatureBuilder = require(ReplicatedStorage.Shared.Util.CreatureBuilder)
+local Validate = require(ServerScriptService.Server.Util.Validate)
+local RateLimiter = require(ServerScriptService.Server.Util.RateLimiter)
+local CreatureService = require(ServerScriptService.Server.Services.CreatureService)
 
 local TestRunner = {}
 
@@ -106,10 +113,138 @@ test("30 criaturas, todas con zona y rareza válidas", function()
 end)
 
 test("Zonas ordenadas por distancia", function()
-	assert(Zones.forDistance(0) == 1)
-	assert(Zones.forDistance(199) == 1)
-	assert(Zones.forDistance(200) == 2)
-	assert(Zones.forDistance(1e12) == Zones.COUNT)
+	assert(Zones.forDistance(0) == 1, "distancia 0 debe ser zona 1")
+	assert(Zones.forDistance(199) == 1, "justo antes del umbral sigue siendo zona 1")
+	assert(Zones.forDistance(200) == 2, "en el umbral ya es zona 2")
+	assert(Zones.forDistance(1e12) == Zones.COUNT, "una distancia enorme debe dar la última zona")
+end)
+
+test("Formulas: costes base y monotonía de nivel", function()
+	assert(Formulas.trainingCost(0) == 30, "coste entreno nivel 0 = " .. Formulas.trainingCost(0))
+	assert(Formulas.capsuleCost(0) == 300, "coste cápsula nivel 0 = " .. Formulas.capsuleCost(0))
+	assert(Formulas.trainingCost(1) > Formulas.trainingCost(0), "el coste debe subir con el nivel")
+	assert(Formulas.capsuleCost(1) > Formulas.capsuleCost(0), "el coste debe subir con el nivel")
+	assert(Formulas.trainingRate(0, true) == Formulas.trainingRate(0, false) * 2, "turbo debe duplicar")
+	assert(
+		Formulas.gardenCapacity(true, true)
+			== Formulas.BASE_GARDEN_SLOTS + Formulas.EXTRA_SLOTS_PASS + Formulas.PLUS_EXTRA_SLOTS,
+		"capacidad con pase + Plus"
+	)
+end)
+
+test("Formulas.luck respeta el tope de diseño (Rarities.MAX_LUCK)", function()
+	assert(Formulas.luck(0, false, false) == 1, "base sin bonos debe ser 1")
+	assert(near(Formulas.luck(30, true, true), 2.35), "con el roster actual no debería acercarse al tope")
+	assert(Formulas.luck(1000, true, true) == Rarities.MAX_LUCK, "debe recortar a " .. Rarities.MAX_LUCK)
+end)
+
+test("Validate.number rechaza NaN/infinito/fuera de rango/tipo erróneo", function()
+	assert(Validate.number(0 / 0, 0, 100) == nil, "NaN debe rechazarse")
+	assert(Validate.number(math.huge, 0, 100) == nil, "infinito debe rechazarse")
+	assert(Validate.number(-math.huge, 0, 100) == nil, "-infinito debe rechazarse")
+	assert(Validate.number(999, 0, 100) == nil, "fuera de rango debe rechazarse")
+	assert(Validate.number("5", 0, 100) == nil, "un string nunca es un number válido")
+	assert(Validate.number(42, 0, 100) == 42, "un valor válido debe pasar")
+end)
+
+test("Validate.oneOf rechaza fuera de lista blanca/tipo erróneo/demasiado largo", function()
+	local whitelist = { training = true, capsule = true }
+	assert(Validate.oneOf("hack", whitelist) == nil, "fuera de la lista blanca debe rechazarse")
+	assert(Validate.oneOf(123, whitelist) == nil, "un número nunca es un oneOf válido")
+	assert(Validate.oneOf(string.rep("a", 41), whitelist) == nil, "más de 40 caracteres debe rechazarse")
+	assert(Validate.oneOf("", whitelist) == nil, "string vacío debe rechazarse")
+	assert(Validate.oneOf("training", whitelist) == "training", "un valor de la lista debe pasar")
+end)
+
+test("CreatureService.discoveredMask: un bit por criatura, sin cruzarse", function()
+	local index = {}
+	index[Creatures.LIST[1].id] = true
+	index[Creatures.LIST[15].id] = true
+	index[Creatures.LIST[Creatures.COUNT].id] = true
+	local data = { index = index } :: any
+	local mask = CreatureService.discoveredMask(data)
+	assert(CreatureService.discoveredCount(data) == 3, "deberían ser 3 descubiertas")
+	assert(bit32.band(mask, bit32.lshift(1, 0)) ~= 0, "la 1ª debe estar marcada")
+	assert(bit32.band(mask, bit32.lshift(1, 14)) ~= 0, "la 15ª debe estar marcada")
+	assert(bit32.band(mask, bit32.lshift(1, Creatures.COUNT - 1)) ~= 0, "la última debe estar marcada")
+	assert(bit32.band(mask, bit32.lshift(1, 1)) == 0, "la 2ª NO debe estar marcada")
+	assert(bit32.band(mask, bit32.lshift(1, Creatures.COUNT - 2)) == 0, "la penúltima NO debe estar marcada")
+end)
+
+test("RateLimiter permite N por ventana y bloquea el resto", function()
+	local allow = RateLimiter.new(3, 1)
+	local key = {} -- RateLimiter solo usa la clave para indexar la tabla, sirve cualquier valor no nulo
+	local allowed = 0
+	for _ = 1, 5 do
+		if allow(key) then
+			allowed += 1
+		end
+	end
+	assert(allowed == 3, "debería permitir exactamente 3 de 5, permitió " .. allowed)
+end)
+
+test("Terraform: getOrigin devuelve un Vector3 (los servicios no fijan 0,0,120 a mano)", function()
+	local TerraformService = require(ServerScriptService.Server.Services.TerraformService)
+	assert(typeof(TerraformService.getOrigin()) == "Vector3")
+end)
+
+test("Escenografía: respeta el tope por franja y la probabilidad", function()
+	local SceneryService = require(ServerScriptService.Server.Services.SceneryService)
+	local Scenery = require(ReplicatedStorage.Shared.Config.Scenery)
+	assert(SceneryService.shouldSpawn(0, 0), "con cupo y tirada baja nace")
+	assert(not SceneryService.shouldSpawn(0, 0.99), "tirada alta no nace")
+	assert(not SceneryService.shouldSpawn(Scenery.MAX_PER_BAND, 0), "sin cupo nunca nace")
+	assert(#Scenery.KIND_BY_ZONE == Zones.COUNT, "un tipo de prop por zona")
+end)
+
+test("Plataforma: el spawn queda sobre la base y mira al planeta", function()
+	local LaunchPlatformService = require(ServerScriptService.Server.Services.LaunchPlatformService)
+	local origin = Vector3.new(10, 5, 200)
+	local cf = LaunchPlatformService.spawnCFrame(origin)
+	assert(near(cf.Position.X, origin.X), "centrado en X respecto al origen")
+	assert(cf.Position.Z < origin.Z, "detrás de la primera fila del planeta")
+	assert(cf.Position.Y > origin.Y, "encima de la base")
+	assert(cf.LookVector:Dot(Vector3.new(0, 0, 1)) > 0.99, "mira hacia el planeta (+Z)")
+	local moved = LaunchPlatformService.spawnCFrame(origin + Vector3.new(0, 0, 50))
+	assert(near(moved.Position.Z - cf.Position.Z, 50), "sigue al origen del planeta")
+end)
+
+test("CreatureBuilder: rasgos por rareza, mutaciones y construcción de las 30 criaturas", function()
+	local common = CreatureBuilder.describe("z1_Comun", "Ninguna")
+	local legend = CreatureBuilder.describe("z1_Legendario", "Ninguna")
+	assert(common ~= nil and legend ~= nil)
+	assert(#common.traits == 0 and #legend.traits == 4, "más rareza, más rasgos")
+	assert(legend.bodySize > common.bodySize and legend.glow and not common.glow)
+	local giant = CreatureBuilder.describe("z1_Comun", "Gigante")
+	assert(giant ~= nil and giant.scale > 1)
+	local rainbow = CreatureBuilder.describe("z1_Comun", "Arcoiris")
+	assert(rainbow ~= nil and rainbow.rainbow and rainbow.glow)
+	assert(CreatureBuilder.describe("no_existe", "Ninguna") == nil, "id inválido -> nil")
+	for _, creature in Creatures.LIST do
+		local model = CreatureBuilder.build(creature.id, "Ninguna", Vector3.zero)
+		assert(model ~= nil and model:FindFirstChild("Cuerpo") ~= nil, creature.id)
+		model:Destroy()
+	end
+end)
+
+test("Planeta: un lanzamiento medio sube ~0,06 % (ritmo acordado x3)", function()
+	local expected = 0
+	for _, id in Rarities.ORDER do
+		local def = Rarities.DEFS[id]
+		expected += def.baseWeight / 100 * def.cellsPerThrow
+	end
+	assert(expected > 5 and expected < 6, "celdas medias por lanzamiento = " .. expected)
+end)
+
+test("Ambiente: 0 % gris apagado, 100 % cálido y brillante, sin NaN", function()
+	local dead = Ambience.at(0)
+	local alive = Ambience.at(100)
+	assert(dead.saturation < alive.saturation and dead.brightness < alive.brightness)
+	assert(Ambience.at(-50).brightness == dead.brightness, "valores bajo 0 se acotan")
+	assert(Ambience.at(1e9).brightness == alive.brightness, "valores sobre 100 se acotan")
+	assert(Ambience.at(0 / 0).brightness == dead.brightness, "NaN se trata como 0")
+	local mid = Ambience.at(50).brightness
+	assert(mid > dead.brightness and mid < alive.brightness)
 end)
 
 local function freshData(): any

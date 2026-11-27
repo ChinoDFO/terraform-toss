@@ -11,8 +11,13 @@ local ThrowService = require(Services.ThrowService)
 local DailyService = require(Services.DailyService)
 local PlusService = require(Services.PlusService)
 local ProgressionService = require(Services.ProgressionService)
+local GardenVisualService = require(Services.GardenVisualService)
+local SceneryService = require(Services.SceneryService)
+local LaunchPlatformService = require(Services.LaunchPlatformService)
 
 TerraformService.init()
+SceneryService.init()
+LaunchPlatformService.init()
 PolicyGate.init()
 PurchaseService.init() -- antes de DataService para escuchar Loaded a tiempo
 EconomyService.init()
@@ -20,6 +25,7 @@ DailyService.init()
 ThrowService.init()
 PlusService.init()
 ProgressionService.init()
+GardenVisualService.init()
 DataService.init() -- al final: empieza a cargar jugadores cuando todos escuchan Loaded
 
 print("[Terraform Toss] Servidor listo")

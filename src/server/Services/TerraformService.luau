@@ -205,6 +205,12 @@ function TerraformService.planetMultiplier(): number
 	return 1 + 0.1 * (planet - 1)
 end
 
+-- Centro del planeta (Workspace.PlanetOrigin si existe). Otros servicios lo usan para colocar
+-- cosas relativas al planeta sin duplicar la posición.
+function TerraformService.getOrigin(): Vector3
+	return origin
+end
+
 function TerraformService.onPlanetRestored(callback: (number) -> ())
 	table.insert(onRestored, callback)
 end

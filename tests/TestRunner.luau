@@ -179,6 +179,11 @@ test("RateLimiter permite N por ventana y bloquea el resto", function()
 	assert(allowed == 3, "debería permitir exactamente 3 de 5, permitió " .. allowed)
 end)
 
+test("Terraform: getOrigin devuelve un Vector3 (los servicios no fijan 0,0,120 a mano)", function()
+	local TerraformService = require(ServerScriptService.Server.Services.TerraformService)
+	assert(typeof(TerraformService.getOrigin()) == "Vector3")
+end)
+
 function TestRunner.run(): string
 	local passed, failed = 0, 0
 	local lines: { string } = {}

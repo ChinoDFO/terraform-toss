@@ -10,6 +10,7 @@ local Formulas = require(ReplicatedStorage.Shared.Util.Formulas)
 local Odds = require(ReplicatedStorage.Shared.Util.Odds)
 local WeightedRandom = require(ReplicatedStorage.Shared.Util.WeightedRandom)
 local Perks = require(script.Parent.Parent.Util.Perks)
+local GardenVisualService = require(script.Parent.GardenVisualService)
 
 type PlayerData = Types.PlayerData
 
@@ -73,6 +74,7 @@ function CreatureService.grant(
 
 	if #data.garden < capacity then
 		table.insert(data.garden, slot)
+		GardenVisualService.sync(player, data)
 		return {
 			creatureId = creature.id,
 			rarity = rarity,
@@ -93,6 +95,7 @@ function CreatureService.grant(
 	end
 	if newIncome > worstIncome then
 		data.garden[worstIndex] = slot
+		GardenVisualService.sync(player, data)
 		local sale = worstIncome * Formulas.SELL_SECONDS
 		data.cash += sale
 		return {

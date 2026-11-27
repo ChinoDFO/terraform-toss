@@ -10,7 +10,19 @@ local OFFSET = Vector3.new(0, 0.5, -30) -- delante de la primera fila del planet
 local METAL = Color3.fromRGB(70, 75, 90)
 local LAMP_COLOR = Color3.fromRGB(255, 220, 150)
 
+local SPAWN_SIZE = Vector3.new(8, 1, 8)
+local SPAWN_BACK = 6 -- studs hacia atrás desde el centro (lejos del borde abierto)
+
 local LaunchPlatformService = {}
+
+-- Posición y orientación del punto de aparición: sobre la base, mirando al planeta (+Z).
+-- Pura (se prueba): depende solo del origen del planeta.
+function LaunchPlatformService.spawnCFrame(origin: Vector3): CFrame
+	local center = origin + OFFSET
+	local position = center + Vector3.new(0, SIZE.Y / 2 + SPAWN_SIZE.Y / 2, -SPAWN_BACK)
+	-- El jugador aparece mirando hacia donde apunta el LookVector del SpawnLocation: +Z = el planeta.
+	return CFrame.lookAt(position, position + Vector3.new(0, 0, 1))
+end
 
 local function make(
 	parent: Instance,
@@ -84,6 +96,26 @@ function LaunchPlatformService.init()
 			light.Brightness = 1.5
 			light.Shadows = false
 			light.Parent = lamp
+		end
+	end
+
+	-- Punto de aparición invisible sobre la plataforma (Neutral, sin escudo).
+	local spawn = Instance.new("SpawnLocation")
+	spawn.Name = "SpawnPlataforma"
+	spawn.Anchored = true
+	spawn.CanCollide = false
+	spawn.CanQuery = false
+	spawn.CanTouch = false
+	spawn.Transparency = 1
+	spawn.Size = SPAWN_SIZE
+	spawn.Neutral = true
+	spawn.Duration = 0
+	spawn.CFrame = LaunchPlatformService.spawnCFrame(TerraformService.getOrigin())
+	spawn.Parent = model
+	-- Cualquier otro SpawnLocation del lugar (p. ej. el de la plantilla en 0,0,0) se desactiva.
+	for _, inst in Workspace:GetDescendants() do
+		if inst:IsA("SpawnLocation") and inst ~= spawn then
+			inst.Enabled = false
 		end
 	end
 	model.Parent = Workspace

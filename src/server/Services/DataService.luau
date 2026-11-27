@@ -75,6 +75,10 @@ local function defaultData(): PlayerData
 		starterPackOwned = false,
 		lastOnline = os.time(),
 		receipts = {},
+		tutorialStep = 1,
+		questDay = 0,
+		questBase = { throws = 0, upgrades = 0, cells = 0 },
+		questClaimed = { false, false, false },
 	}
 end
 

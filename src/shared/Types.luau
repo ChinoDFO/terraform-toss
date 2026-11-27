@@ -7,6 +7,12 @@ export type GardenSlot = {
 	mutation: string,
 }
 
+export type QuestCounters = {
+	throws: number,
+	upgrades: number,
+	cells: number,
+}
+
 export type PlayerData = {
 	version: number,
 	cash: number,
@@ -26,6 +32,10 @@ export type PlayerData = {
 	starterPackOwned: boolean,
 	lastOnline: number,
 	receipts: { string },
+	tutorialStep: number,
+	questDay: number,
+	questBase: QuestCounters,
+	questClaimed: { boolean },
 }
 
 export type ThrowResult = {

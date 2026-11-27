@@ -25,6 +25,10 @@ local PurchaseService = {}
 local notify: RemoteEvent
 local allowRequest = RateLimiter.new(2, 1)
 
+-- FTUE: "sin ventanas de compra los primeros 3 minutos" (docs/CONTEXTO_PROYECTO.md §2).
+local FTUE_SHOP_DELAY = 180
+local shopAvailableAt: { [Player]: number } = {}
+
 -- Qué hace cada producto consumible. (Los pases se aplican vía atributo Pass_<key>.)
 local HANDLERS: { [string]: Handler } = {
 	PackArranque = function(player: Player, data: PlayerData)
@@ -69,6 +73,11 @@ local function onRequestPurchase(player: Player, rawKey: unknown)
 	end
 	local key = Validate.oneOf(rawKey, Products.BY_KEY)
 	if key == nil then
+		return
+	end
+	local availableAt = shopAvailableAt[player]
+	if availableAt and os.time() < availableAt then
+		notify:FireClient(player, "Info", { text = "La tienda se desbloquea a los pocos minutos de empezar a jugar." })
 		return
 	end
 	local def = Products.BY_KEY[key]
@@ -132,10 +141,19 @@ function PurchaseService.init()
 	Net.event("RequestPurchase").OnServerEvent:Connect(onRequestPurchase)
 
 	DataService.Loaded:Connect(function(player: Player, data: PlayerData)
+		-- FTUE de verdad: solo para quien nunca lanzó una cápsula (igual que la rareza
+		-- garantizada del primer lanzamiento). Quien vuelve a jugar ve la tienda de inmediato.
+		local availableAt = if data.totalThrows == 0 then os.time() + FTUE_SHOP_DELAY else 0
+		shopAvailableAt[player] = availableAt
+		player:SetAttribute("ShopAvailableAt", availableAt)
 		refreshPasses(player)
 		player:SetAttribute("EggPity", data.paidEggPity)
 		player:SetAttribute("FreeEggs", data.freeEggs)
 		player:SetAttribute("StarterPackOwned", data.starterPackOwned)
+	end)
+
+	Players.PlayerRemoving:Connect(function(player: Player)
+		shopAvailableAt[player] = nil
 	end)
 
 	MarketplaceService.PromptGamePassPurchaseFinished:Connect(

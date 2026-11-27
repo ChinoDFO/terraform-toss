@@ -73,7 +73,7 @@ Ritmo simulado (activo, sin pases): zona 2 ~1 min, 3 ~3 min, 4 ~15 min, 5 ~1,5 h
 - **30 criaturas** = 6 zonas × 5 rarezas (nombres en `Config/Creatures.luau`: Brotín, Musgolín, Cactopo, Liquenzorro, Rocalirio; Arenuga… Corazón de Gaia).
 - **Costes:** entreno `30 × 1,85^nivel`; cápsula `300 × 4^nivel`.
 - **Jardín:** 8 huecos (+4 pase, +1 Roblox Plus). Lleno → reemplaza a la peor si la nueva vale más; la vendida da 30 s de su ingreso. Ingresos offline: 50 %, máx. 8 h.
-- **Planeta:** 96×96 = 9.216 celdas lógicas en 6 franjas; se dibuja con 32×32 = 1.024 partes. Con 6 jugadores: 25 % en ~16,5 min, 100 % en ~66 min.
+- **Planeta:** 96×96 = 9.216 celdas lógicas en 6 franjas; se dibuja con 32×32 = 1.024 partes. Con 6 jugadores: 25 % en ~5,5 min, 100 % en ~22 min (celdas por lanzamiento x3, decisión del 27 nov).
 - **Bloom Event** al 25/50/75 %: 10 min de ×2 dinero y +0,5 suerte para todos. **100 %:** 5 min de ingresos + 1 Huevo Estelar gratis para todos; siguiente planeta (+10 % de dinero en ese servidor).
 - **Combo:** otro jugador a ≤ 30 studs soltó hace ≤ 1 s → +25 % distancia y +0,1 suerte.
 - **Diario:** ciclo de 7 días. Día 3 de racha → Turbo ×2 de entrenamiento gratis para siempre. Día 7 → 1 Huevo Estelar gratis.

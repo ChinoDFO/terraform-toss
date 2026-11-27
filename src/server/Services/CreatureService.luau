@@ -10,6 +10,7 @@ local Formulas = require(ReplicatedStorage.Shared.Util.Formulas)
 local Odds = require(ReplicatedStorage.Shared.Util.Odds)
 local WeightedRandom = require(ReplicatedStorage.Shared.Util.WeightedRandom)
 local Perks = require(script.Parent.Parent.Util.Perks)
+local GardenVisualService = require(script.Parent.GardenVisualService)
 
 type PlayerData = Types.PlayerData
 
@@ -37,6 +38,24 @@ function CreatureService.discoveredCount(data: PlayerData): number
 	return n
 end
 
+-- Un bit por criatura (según el orden de Creatures.LIST) para que el cliente pinte el índice
+-- sin necesitar un RemoteEvent nuevo: cabe en un solo atributo numérico (30 criaturas <= 32 bits).
+function CreatureService.discoveredMask(data: PlayerData): number
+	local mask = 0
+	for i, creature in Creatures.LIST do
+		if data.index[creature.id] == true then
+			mask = bit32.bor(mask, bit32.lshift(1, i - 1))
+		end
+	end
+	return mask
+end
+
+local function syncDiscovered(player: Player, data: PlayerData)
+	player:SetAttribute("Discovered", CreatureService.discoveredCount(data))
+	player:SetAttribute("DiscoveredMask", CreatureService.discoveredMask(data))
+end
+CreatureService.syncDiscovered = syncDiscovered
+
 function CreatureService.grant(
 	player: Player,
 	data: PlayerData,
@@ -47,7 +66,7 @@ function CreatureService.grant(
 	local creature = Creatures.get(zone, rarity)
 	local isNew = data.index[creature.id] ~= true
 	data.index[creature.id] = true
-	player:SetAttribute("Discovered", CreatureService.discoveredCount(data))
+	syncDiscovered(player, data)
 
 	local slot: Types.GardenSlot = { creatureId = creature.id, mutation = mutation }
 	local newIncome = Formulas.slotIncome(slot)
@@ -55,6 +74,7 @@ function CreatureService.grant(
 
 	if #data.garden < capacity then
 		table.insert(data.garden, slot)
+		GardenVisualService.sync(player, data)
 		return {
 			creatureId = creature.id,
 			rarity = rarity,
@@ -75,6 +95,7 @@ function CreatureService.grant(
 	end
 	if newIncome > worstIncome then
 		data.garden[worstIndex] = slot
+		GardenVisualService.sync(player, data)
 		local sale = worstIncome * Formulas.SELL_SECONDS
 		data.cash += sale
 		return {

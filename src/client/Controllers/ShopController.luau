@@ -171,6 +171,25 @@ local function build()
 		"Tienda",
 		Color3.fromRGB(60, 120, 230)
 	)
+	open.Visible = false
+
+	-- FTUE: la tienda aparece recién a los pocos minutos (docs §2), nunca antes.
+	local function revealWhenAvailable()
+		local availableAt = tonumber(player:GetAttribute("ShopAvailableAt"))
+		if availableAt == nil then
+			return
+		end
+		local remaining = availableAt - os.time()
+		if remaining <= 0 then
+			open.Visible = true
+		else
+			task.delay(remaining, function()
+				open.Visible = true
+			end)
+		end
+	end
+	revealWhenAvailable()
+	player:GetAttributeChangedSignal("ShopAvailableAt"):Connect(revealWhenAvailable)
 
 	panel = Ui.make("Frame", {
 		Name = "Panel",

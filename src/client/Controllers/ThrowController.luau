@@ -12,6 +12,8 @@ local Meter = require(ReplicatedStorage.Shared.Util.Meter)
 local Rarities = require(ReplicatedStorage.Shared.Config.Rarities)
 local Ui = require(script.Parent.Parent.UI.Ui)
 local UIPool = require(script.Parent.Parent.UI.UIPool)
+local Sfx = require(script.Parent.Parent.UI.Sfx)
+local Vfx = require(script.Parent.Parent.UI.Vfx)
 
 local player = Players.LocalPlayer
 local FLIGHT_TIME = 1.1
@@ -21,6 +23,7 @@ local ThrowController = {}
 
 local charging = false
 local chargeStart = 0
+local chargeSound: Sound?
 local meterFill: Frame
 local meterFrame: Frame
 local projectilePool: UIPool.Pool<BasePart>
@@ -32,6 +35,7 @@ local function beginCharge()
 	charging = true
 	chargeStart = os.clock()
 	meterFrame.Visible = true
+	chargeSound = Sfx.startLoop("Charge")
 	Net.event("ThrowStart"):FireServer()
 end
 
@@ -41,6 +45,9 @@ local function endCharge()
 	end
 	charging = false
 	meterFrame.Visible = false
+	Sfx.stopLoop(chargeSound)
+	chargeSound = nil
+	Sfx.play("Release")
 	Net.event("ThrowRelease"):FireServer()
 end
 
@@ -58,6 +65,8 @@ local function animateProjectile(from: Vector3, to: Vector3, color: Color3)
 		if t >= 1 then
 			connection:Disconnect()
 			projectilePool.release(part)
+			Sfx.play("Land")
+			Vfx.burst(to, color)
 		end
 	end)
 end
@@ -130,7 +139,11 @@ local function build()
 
 	RunService.RenderStepped:Connect(function()
 		if charging then
-			meterFill.Size = UDim2.fromScale(Meter.valueAt(os.clock() - chargeStart), 1)
+			local value = Meter.valueAt(os.clock() - chargeStart)
+			meterFill.Size = UDim2.fromScale(value, 1)
+			if chargeSound then
+				chargeSound.PlaybackSpeed = 0.6 + value * 0.8 -- el tono sube con el medidor
+			end
 		end
 	end)
 end

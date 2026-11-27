@@ -68,6 +68,16 @@ ver la consola de Studio.
    el `Source` cambió. Para una lectura de verdad fresca, entra a modo **Play**
    (`start_stop_play`) y corre la prueba ahí.
 
+9. **Si `claude mcp list` dice "Connected" pero "tools fetch failed — Request timed out"** (pasó el
+   27 nov): el proxy `StudioMCP.exe` está vivo pero Studio NO se conectó a él (se ve porque en
+   `netstat` el puerto 127.0.0.1:13469 solo tiene conexiones del propio `StudioMCP.exe`). Solución
+   que funcionó: en Studio, **activar la integración MCP** (Assistant → ⋯ → Manage MCP Servers →
+   "Enable Studio as MCP server", o la opción equivalente en Studio Settings) con el place abierto, y
+   **reiniciar la sesión de Claude** para que cargue las herramientas (`list_roblox_studios` ya
+   lista el place). No hace falta reiniciar Studio ni el proceso `StudioMCP.exe`.
+10. **Control de pantalla (computer-use): no hace falta.** Con el MCP conectado todo se hace con
+    `execute_luau`, `start_stop_play`, `get_console_output` y `screen_capture`.
+
 Con esto conectado, las herramientas disponibles son (entre otras): `execute_luau`,
 `start_stop_play`, `get_console_output`, `screen_capture`, `search_game_tree`, `inspect_instance`,
 `script_grep`/`script_read`/`script_search`, `user_mouse_input`/`user_keyboard_input`, y las de
@@ -106,45 +116,55 @@ ni clonarlo, aunque tenga el link.
 
 ---
 
-## 🗺️ Qué sigue (actualizado 2026-11-26)
+## 🗺️ Qué sigue (actualizado 2026-11-27)
 
-**6 Pull Requests abiertos, ninguno mergeado todavía** — esto es lo primero que hay que atender:
+**Estado de `master`: los 14 Pull Requests (#1–#14) están MERGEADOS.** No queda ningún PR de
+funcionalidad abierto (solo el de esta documentación, si aún no se mergeó). Lo primero que hay que
+atender ahora es la **revisión cruzada**: el cofundador que no estuvo en esta sesión debería leer lo
+mergeado (ver la entrada 16 de abajo) y probarlo jugando, porque se mergeó con pruebas automáticas
+y playtest de Claude pero sin revisión humana previa.
 
-| PR | Qué es | Depende de |
-|---|---|---|
-| [`#1`](https://github.com/ChinoDFO/terraform-toss/pull/1) | Sonidos + efectos del lanzamiento, HUD con 2 decimales | — |
-| [`#2`](https://github.com/ChinoDFO/terraform-toss/pull/2) | Pruebas dinámicas del servidor + arreglo del tope de suerte | — |
-| [`#3`](https://github.com/ChinoDFO/terraform-toss/pull/3) | Índice de criaturas (Semana 2) | `#2` (mergear ese primero) |
-| [`#4`](https://github.com/ChinoDFO/terraform-toss/pull/4) | Tienda oculta los primeros 3 minutos (FTUE) | — |
-| [`#5`](https://github.com/ChinoDFO/terraform-toss/pull/5) | Zonas visibles (placeholder: letreros flotantes) | — |
-| [`#6`](https://github.com/ChinoDFO/terraform-toss/pull/6) | Jardín 3D (placeholder: cubos de color) | — |
-
-Orden sugerido para revisar/mergear: `#2` → `#3` → el resto (`#1`, `#4`, `#5`, `#6`) en cualquier
-orden, son independientes entre sí. Todos (salvo `#1`, hecho en otra sesión) quedaron probados de
-verdad dentro de Studio, no solo leídos — ver la entrada de hoy más abajo para el detalle de cada
-uno. Después de mergear, alguien con Rojo conectado debería correr `TestRunner.run()` una vez más
-y confirmar que sigue en verde con todo junto.
+**Pendientes inmediatos (técnicos):**
+- [ ] Probar con **2 o más jugadores** (Test > Start con varios clientes): combo, aviso de combo,
+  jardines de varios jugadores en el círculo, escenografía compartida. No se probó.
+- [ ] Probar la **celebración al 100 %** (fuegos artificiales del cliente, recompensa a todos,
+  reinicio del planeta a los 8 s con limpieza de la escenografía). No se probó en vivo.
+- [ ] Averiguar el aviso `ContentId: rbxassetid://203785492 failed due to: Asset type does not match
+  requested type` (sale 3 veces al arrancar Play). No viene de `src/` (ese ID no existe en el
+  código); origen desconocido (¿algo del place, de la plantilla o de un plugin?). Es inofensivo,
+  pero conviene identificarlo.
+- [ ] Ajustar a ojo los **valores visuales** que son primera propuesta: colores/niebla del
+  ambiente (`Config/Ambience`), proporciones y colores de criaturas (`CreatureBuilder`), posición y
+  tamaño de la plataforma (`LaunchPlatformService`), densidad de escenografía (`Config/Scenery`).
+- [ ] Sustituir los **sonidos temporales** del motor por audio propio/licenciado antes de publicar.
+- [ ] Arte/mapa real (Dev B): las criaturas, la plataforma y la escenografía son procedurales y
+  simples; los letreros de zona siguen siendo placeholder.
+- [ ] Guardar el place de Studio una vez (`File > Save to File` / `Save to Roblox`): sigue sin
+  guardarse; el place de pruebas se llama `Place1` y usa datos en memoria.
 
 **Roadmap** (`docs/CONTEXTO_PROYECTO.md` §6, fuente de verdad si esto queda desactualizado):
-- **Semana 1** (30 nov – 6 dic): bucle central, HUD, efectos, sonidos → listo, esperando merge de
-  los PR de arriba. Falta "plataforma" (mapa real) — es de Dev B, no de código.
-- **Semana 2** (7–13 dic): índice ✓ (PR #3), 30 criaturas ✓ (ya existían como datos), zonas
-  visibles ✓ placeholder (PR #5), jardín 3D ✓ placeholder (PR #6), FTUE ✓ (PR #4). Falta que Dev B
-  reemplace los dos placeholders por arte/mapa de verdad cuando los tenga.
-- **Semana 3 y 4**: sin empezar (tienda real en Creator Hub, pruebas, publicación).
+- **Semana 1** (30 nov – 6 dic): bucle central, HUD, efectos, sonidos ✓ (PR #1). Plataforma ✓
+  procedural (PR #10/#14); el mapa "de verdad" sigue siendo de Dev B.
+- **Semana 2** (7–13 dic): índice ✓ (#3), 30 criaturas ✓, zonas visibles ✓ placeholder (#5), jardín
+  3D ✓ (#6/#8, ahora con criaturas procedurales #11), FTUE ✓ (#4 tienda + #12 tutorial/misiones).
+  Adelantado además: ambiente (#9/#13), escenografía/partículas/celebración (#10), spawn (#14).
+- **Semana 3** (14–20 dic): productos reales en Creator Hub, tienda ética (precios desde
+  `GetProductInfoAsync`), invitaciones, Share Links, celebración al 100 % (código hecho, falta probar).
+- **Semana 4** (21–25 dic): congelar, prueba cerrada (22 dic), miniaturas, publicar 16+ (jueves 24),
+  tarifa Kids & Select. **Lanzamiento público sábado 26 dic** (plan B: sábado 9 ene 2027).
+- Después: actualización cada 2 semanas (ver tabla de `docs/CONTEXTO_PROYECTO.md` §6).
 
 **Pendientes de equipo (no técnicos, de siempre):**
-- Invitar al segundo cofundador (circular con la sección de arriba — falta su usuario).
-- Nombre definitivo del juego/estudio y reparto de ingresos.
+- **Invitar al segundo cofundador a GitHub** (falta su usuario de GitHub; ver la sección de arriba)
+  y que clone el repo.
+- Nombre definitivo del juego/estudio y reparto de ingresos (acuerdo escrito entre cofundadores).
 - Verificar en Creator Hub el precio de crear un grupo y los requisitos de Kids & Select vigentes.
-- El place de Studio **nunca se ha guardado** (ni a archivo ni a Roblox) — Claude no puede hacer
-  ese primer guardado solo, hace falta `File > Save to File` (o `Save to Roblox`) una vez, a mano.
-  No es urgente: todo lo importante vive en `src/` (git), no en el place — pero conviene hacerlo
-  para no perder ajustes manuales que se hagan directo en Studio (cámara, Terreno, etc.).
+- **Revisión cruzada** de lo mergeado el 27 nov (`CLAUDE.md` pide que cada PR lo revise el otro
+  cofundador; los 14 se mergearon por decisión explícita del dueño del repo sin esa revisión).
 
 ---
 
-## ✅ Pruebas humanas pendientes (antes de aprobar los PR)
+## ✅ Pruebas humanas pendientes (lista histórica: los PR #1–#6 ya se mergearon; sigue valiendo como checklist de juego)
 
 Todo lo de aquí necesita ojos/oídos de una persona — nada de esto se puede confirmar solo con
 `TestRunner` ni con capturas de pantalla hechas por Claude (ya se probó todo lo automatizable;
@@ -189,6 +209,123 @@ cada PR por separado o todos juntos después de mergear.
 - [ ] Sensación general de ritmo jugando varios minutos seguidos (la entrada (8) de la bitácora ya
   pedía esto para el balance del planeta; sigue pendiente).
 - [ ] Consola de Studio sin errores nuevos durante una sesión larga con 2+ jugadores reales.
+
+---
+
+## 2026-11-27 (16) — Subida de nivel del juego: x3 celdas, ambiente, mundo y criaturas procedurales, FTUE, spawn; los 14 PR mergeados
+
+**En una frase:** se aceleró el planeta (x3 celdas), se añadieron ambiente, plataforma, escenografía,
+partículas, criaturas procedurales, tutorial/misiones/meta y un spawn sobre la plataforma
+(PR #7–#14); se verificó TODO junto en Studio (25/25 pruebas + playtest) y Anton pidió mergear los
+14 PR a `master`.
+
+**Cómo se trabajó (importante para el siguiente Claude):**
+- La sesión de nube NO puede empujar a GitHub; el trabajo se hizo en el PC de Anton con Remote
+  Control y las credenciales de `gh` de ese PC. Cada tarea = una rama + un PR en español, con
+  commits `feat:`/`fix:`/`docs:` y pie `Co-Authored-By`. Los PR se apilaron cuando dependían de otro.
+- Studio + Rojo 7.7.1 (plugin y `rokit.toml` ya coinciden) + MCP integrado de Studio. El MCP estuvo
+  caído un rato por "tools fetch failed" (ver el punto 9 de "Cómo conectar"): la solución fue activar
+  la integración MCP en Studio y reiniciar la sesión.
+- En Windows, `git` sin `.gitattributes` hace ruido de CRLF/LF en `git status` (muchos archivos salen
+  " M" aunque no cambien). `.gitattributes` (`* text=auto eol=lf`) llegó con el PR #3 y el índice es
+  LF; `stylua` normaliza a LF. No hagas `git add -A` sin mirar `git diff --stat`.
+
+**Orden en que quedó `master` (merge normal, sin squash, sin reescribir historia):**
+`#2` (pruebas) → `#3` (índice + `.gitattributes`) → `#6` (jardín 3D, entró vía `#8`) → `#8` (jardín
+usa `PlanetOrigin` + resolución del conflicto #3/#6 en `EconomyService`) → `#10` (mundo) → `#11`
+(criaturas) → `#14` (spawn) → `#1` (sonidos/HUD) → `#4` (tienda tras 3 min) → `#5` (letreros de
+zona) → `#7` (x3 celdas) → `#9` (ambiente) → `#12` (FTUE/misiones) → `#13` (cablear ambiente).
+Conflictos: el único real fue `EconomyService` (#3 vs #6: se conservan `CreatureService.syncDiscovered`
+Y `GardenVisualService.sync`); el resto fueron triviales en `tests/TestRunner.luau` y los `Main`
+(quedarse con ambos lados). Una resolución automática dejó una prueba sin `end)` en #14; lo detectó
+`stylua --check` y se corrigió antes de mergear. **Siempre corre `stylua --check src tests` y
+`selene src` tras resolver conflictos.**
+
+**Qué hay en cada módulo nuevo (todo en `src/`, `--!strict`, comentarios en español):**
+- **x3 celdas (PR #7)** — `Config/Rarities.cellsPerThrow` pasó de 1/2/4/8/20 a **3/6/12/24/60**.
+  Por qué: con 1/2/4/8/20 el planeta tardaba ~66 min con 6 jugadores; ahora ~22 min (25 % en ~5,5
+  min). Decisión de Anton del 27 nov. Un lanzamiento medio da ≈5,39 celdas ≈ 0,06 % del planeta
+  (una prueba exige que esté entre 5 y 6).
+- **Ambiente (PR #9 + #13)** — `shared/Config/Ambience` (look "muerto" gris/neblinoso ↔ "vivo"
+  cálido/verde; `Ambience.at(percent)` interpola con curva suave y acota fuera de rango / NaN→0) y
+  `client/Controllers/AmbienceController` (crea o reutiliza Atmosphere, Bloom, ColorCorrection y Sky
+  en `Lighting`; tween de 4 s cuando cambia `ServerState.PlanetPercent`). Solo cosmético y solo
+  cliente. OJO: #9 salió sin el `require`/`init()` en `Main.client`; lo arregló #13.
+- **Mundo procedural (PR #10)** — `LaunchPlatformService` (base 48×1×24, barandas en 3 lados, 4
+  farolas con PointLight, 12 partes, delante del planeta usando `TerraformService.getOrigin()`);
+  `SceneryService` + `Config/Scenery` (helecho/duna/cristal/hielo/árbol/lava por zona; aparecen al
+  restaurar celdas de su franja, prob. 4 % por celda, **tope de 24 por franja**, ancladas, sin
+  colisión, se limpian al reiniciar el planeta); `TerraformService` ganó los hooks
+  `onCellRestored(band, pos)` y `onGridReset()`; `client/Controllers/EffectsController` (ráfaga de
+  partículas del color de la rareza al aterrizar, con pool y tope de 12 emisores; fuegos artificiales
+  al recibir `Notify "PlanetRestored"`).
+- **Jardín (PR #6/#8)** — `GardenVisualService` coloca los jardines de los jugadores en círculo
+  (radio 220) alrededor de `TerraformService.getOrigin()` (que lee `Workspace.PlanetOrigin` si
+  existe; si no, (0,0,120)). Reconstruye el jardín del jugador completo en cada cambio.
+- **Criaturas procedurales (PR #11)** — `shared/Util/CreatureBuilder`: `describe(id, mutación)`
+  (puro, probado) y `build(...)` (cuerpo esférico + ojos; rasgos acumulativos por rareza: orejas →
+  cuernos → alas → aureola; color = mezcla zona+rareza; Épico/Legendario con luz y partículas;
+  mutaciones: Neón / Dorado / Gigante ×1,35 / Cristal / Bioluminiscente / Arcoíris). Los modelos
+  llevan el tag `Creature`; `client/Controllers/CreatureAnimator` los balancea con `PivotTo` (solo a
+  <160 studs de la cámara y a ~30 Hz) y rota el tono del Arcoíris.
+- **FTUE / misiones / meta / combo (PR #12)** — `shared/Config/Quests` (3 misiones diarias: lanzar 10,
+  comprar 2 mejoras, restaurar 40 celdas; recompensa = 120 s de ingreso, mín. 100, solo dinero
+  personal; ventana de combo 1 s / radio 30, que ahora lee también `ThrowService`),
+  `server/Util/Progression` (lógica pura y probada: `rollQuests`, `questProgress`,
+  `advanceTutorial`, `nextGoal`), `server/Services/ProgressionService` (lo aplica; bucle de 1 s) y
+  `client/Controllers/ProgressController` (banner + flecha que rebota, panel "Misiones", etiqueta
+  "Próxima criatura/zona", aviso "¡Combo cerca! Lanza YA" con barra real de 1 s). Las misiones miden
+  la **diferencia de contadores** que el servidor ya lleva (sin hooks ni confianza en el cliente) y
+  se reinician cada día UTC, sin castigo por perder un día. Tutorial: 1 lanza → 2 mejora (se
+  garantiza el dinero de la primera mejora, una vez) → 3 mira tu jardín (solo avanza con el botón
+  "¡Entendido!") → 4 hecho; jugadores con ≥5 lanzamientos lo saltan. `PlayerData` ganó
+  `tutorialStep`, `questDay`, `questBase`, `questClaimed` (con valores por defecto; `reconcile` los
+  rellena en cuentas antiguas).
+- **Spawn (PR #14)** — `LaunchPlatformService.spawnCFrame(origin)` (puro, probado) y un
+  `SpawnLocation` invisible "SpawnPlataforma" (Neutral, `Duration = 0` = sin ForceField) sobre la
+  plataforma, mirando al planeta (+Z). Los demás `SpawnLocation` del place (el de la plantilla en
+  0,0,0) se desactivan en runtime. Antes el jugador aparecía a ~84 studs de la plataforma.
+
+**RemoteEvents nuevos** (declarados en `default.project.json`, ambos C→S con `RateLimiter` y
+`Validate`): `ClaimQuest` (índice entero 1..3; progreso completo y no reclamada; 3/s) y
+`TutorialAck` (sin args; solo vale en el paso 3; 2/s). Atributos nuevos del Player (los escribe solo
+el servidor): `TutorialStep`, `QuestProgress1..3`, `QuestClaimed1..3`, `GoalText`. El cliente de
+ambiente lee el atributo ya existente `ServerState.PlanetPercent` (0–100).
+
+**Pruebas — cómo correrlas y estado:** `TestRunner.run()` = **25 OK, 0 fallos** sobre `master`
+(las 10 originales + índice/máscara + getOrigin + escenografía + CreatureBuilder + x3 celdas +
+ambiente + misiones + tutorial + meta + plataforma/spawn). Con el MCP: `execute_luau` →
+`return require(game:GetService("ServerStorage").Tests.TestRunner).run()`. Trampa: en modo **Edit**,
+`require` cachea por instancia y puede devolver resultados viejos tras un cambio de rama; entra a
+**Play** (`start_stop_play`) y corre la prueba con `datamodel_type: Server`.
+
+**Cómo se verificó en Studio (real, no solo leído):** rama local de integración con todos los PR →
+25/25; playtest con 1 jugador: 47 lanzamientos por los remotes (planeta 0 → 2,44 %, 8 criaturas /
+65 partes en el jardín, 8 modelos de escenografía), tutorial 1→2→3→4, misiones reclamadas (+$3.374),
+entradas basura (1.5, "x", NaN, 0) ignoradas sin error, ambiente y `ProgressUi` activos, spawn en
+(0, 4.9, 84) mirando +Z, consola sin errores nuevos. Tras el merge: `master` 25/25 + playtest corto OK.
+
+**Métricas (Studio, 1 jugador):** Workspace 1.493 instancias / 1.119 partes (1.024 son del planeta);
+GUI 408 instancias; Heartbeat 0,39 ms. **FPS ≈15 constantes** en Studio, idénticos con Bloom /
+ColorCorrection / Atmosphere apagados y con `PlanetCells` quitado → es un tope de Studio/ventana, NO
+del contenido, así que no sirve como métrica.
+
+**Decisiones tomadas:**
+1. **Balance x3 celdas** (planeta ~22 min con 6 jugadores) — pedido de Anton.
+2. **No se optimizó** nada: no hay cuello de botella medido (FPS 15 = tope de Studio) y tocar sin
+   datos arriesga crashes. Los presupuestos ya van en el diseño (partes ancladas y sin colisión,
+   tope de escenografía por franja, pools, animación de criaturas limitada por distancia y frecuencia).
+3. Misiones y tutorial: todo lo decide el servidor; recompensas solo personales y sin dark patterns.
+4. Los PR apilados se mergearon en orden con las bases retargeteadas a `master`.
+
+**Qué NO se probó:** 2+ jugadores; la celebración al 100 % (un intento de forzarla desde
+`execute_luau` falló porque `require` creó otra copia del módulo — fue un artefacto de la prueba,
+no del juego); el camino "jugador que vuelve" del retraso de la tienda (datos en memoria);
+dispositivos móviles; rendimiento fuera de Studio.
+
+**Hallazgos pendientes:** ver "Pendientes inmediatos" en "Qué sigue" (aviso `ContentId
+rbxassetid://203785492` de origen desconocido, valores visuales a ajustar, sonidos temporales, arte
+real, place sin guardar).
 
 ---
 

@@ -12,6 +12,7 @@ local Rarities = require(ReplicatedStorage.Shared.Config.Rarities)
 local Mutations = require(ReplicatedStorage.Shared.Config.Mutations)
 local Creatures = require(ReplicatedStorage.Shared.Config.Creatures)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
+local Ambience = require(ReplicatedStorage.Shared.Config.Ambience)
 
 local TestRunner = {}
 
@@ -108,6 +109,17 @@ test("Zonas ordenadas por distancia", function()
 	assert(Zones.forDistance(199) == 1)
 	assert(Zones.forDistance(200) == 2)
 	assert(Zones.forDistance(1e12) == Zones.COUNT)
+end)
+
+test("Ambiente: 0 % gris apagado, 100 % cálido y brillante, sin NaN", function()
+	local dead = Ambience.at(0)
+	local alive = Ambience.at(100)
+	assert(dead.saturation < alive.saturation and dead.brightness < alive.brightness)
+	assert(Ambience.at(-50).brightness == dead.brightness, "valores bajo 0 se acotan")
+	assert(Ambience.at(1e9).brightness == alive.brightness, "valores sobre 100 se acotan")
+	assert(Ambience.at(0 / 0).brightness == dead.brightness, "NaN se trata como 0")
+	local mid = Ambience.at(50).brightness
+	assert(mid > dead.brightness and mid < alive.brightness)
 end)
 
 function TestRunner.run(): string

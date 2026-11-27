@@ -110,6 +110,15 @@ test("Zonas ordenadas por distancia", function()
 	assert(Zones.forDistance(1e12) == Zones.COUNT)
 end)
 
+test("Planeta: un lanzamiento medio sube ~0,06 % (ritmo acordado x3)", function()
+	local expected = 0
+	for _, id in Rarities.ORDER do
+		local def = Rarities.DEFS[id]
+		expected += def.baseWeight / 100 * def.cellsPerThrow
+	end
+	assert(expected > 5 and expected < 6, "celdas medias por lanzamiento = " .. expected)
+end)
+
 function TestRunner.run(): string
 	local passed, failed = 0, 0
 	local lines: { string } = {}

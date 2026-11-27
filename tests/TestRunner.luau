@@ -204,6 +204,8 @@ test("Plataforma: el spawn queda sobre la base y mira al planeta", function()
 	assert(cf.LookVector:Dot(Vector3.new(0, 0, 1)) > 0.99, "mira hacia el planeta (+Z)")
 	local moved = LaunchPlatformService.spawnCFrame(origin + Vector3.new(0, 0, 50))
 	assert(near(moved.Position.Z - cf.Position.Z, 50), "sigue al origen del planeta")
+end)
+
 test("CreatureBuilder: rasgos por rareza, mutaciones y construcción de las 30 criaturas", function()
 	local common = CreatureBuilder.describe("z1_Comun", "Ninguna")
 	local legend = CreatureBuilder.describe("z1_Legendario", "Ninguna")

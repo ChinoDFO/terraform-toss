@@ -2,7 +2,7 @@
 
 > **Para el cofundador:** sube este archivo como *conocimiento del proyecto* en un Proyecto de Claude llamado "Terraform Toss" (claude.ai → Proyectos → Nuevo proyecto → añadir archivo). Sube también `PLAN_MAESTRO.pdf`. Copia el bloque de la sección 0 en las **instrucciones del proyecto**. Así cualquier conversación que abras ahí sabrá de qué va todo.
 >
-> **Para Claude:** este documento es la fuente de verdad del proyecto. Si algo de aquí contradice una idea genérica sobre Roblox, manda este documento. Si algo parece desactualizado (reglas de Roblox, precios, APIs), dilo y propón verificarlo en create.roblox.com antes de actuar. Versión 1.0 — 24 nov 2026.
+> **Para Claude:** este documento es la fuente de verdad del proyecto. Si algo de aquí contradice una idea genérica sobre Roblox, manda este documento. Si algo parece desactualizado (reglas de Roblox, precios, APIs), dilo y propón verificarlo en create.roblox.com antes de actuar. Versión 1.1 — 27 nov 2026 (actualizado tras mergear los PR #1–#14; el historial detallado está en `ESTADO_DEL_PROYECTO.md`).
 
 ---
 
@@ -60,24 +60,27 @@ Reglas que siempre aplicas:
 
 Ritmo simulado (activo, sin pases): zona 2 ~1 min, 3 ~3 min, 4 ~15 min, 5 ~1,5 h, 6 ~12 h.
 
-| Rareza | Prob. base | Ingreso | Celdas | Exponente de suerte |
+| Rareza | Prob. base | Ingreso | Celdas por lanzamiento (x3 desde el 27 nov) | Exponente de suerte |
 |---|---|---|---|---|
-| Común | 62 % | ×1 | 1 | 0 |
-| Poco común | 25 % | ×2 | 2 | 0,35 |
-| Raro | 10 % | ×5 | 4 | 0,6 |
-| Épico | 2,7 % | ×15 | 8 | 0,85 |
-| Legendario | 0,3 % | ×60 | 20 | 1 |
+| Común | 62 % | ×1 | 3 | 0 |
+| Poco común | 25 % | ×2 | 6 | 0,35 |
+| Raro | 10 % | ×5 | 12 | 0,6 |
+| Épico | 2,7 % | ×15 | 24 | 0,85 |
+| Legendario | 0,3 % | ×60 | 60 | 1 |
 
 - **Suerte** = 1 + 0,02 × criaturas distintas descubiertas + 0,5 (Bloom) + 0,25 (vídeo con recompensa, 10 min). Máx. 5. Peso de cada rareza × suerte^exponente; Común absorbe el resto → siempre suma 100 %.
 - **Mutaciones:** Ninguna 90 % · Neón 4 % (×1,5) · Dorado 3 % (×2) · Gigante 1,5 % (×2,5) · Cristal 1 % (×3) · Bioluminiscente 0,4 % (×4) · Arcoíris 0,1 % (×5).
 - **30 criaturas** = 6 zonas × 5 rarezas (nombres en `Config/Creatures.luau`: Brotín, Musgolín, Cactopo, Liquenzorro, Rocalirio; Arenuga… Corazón de Gaia).
 - **Costes:** entreno `30 × 1,85^nivel`; cápsula `300 × 4^nivel`.
 - **Jardín:** 8 huecos (+4 pase, +1 Roblox Plus). Lleno → reemplaza a la peor si la nueva vale más; la vendida da 30 s de su ingreso. Ingresos offline: 50 %, máx. 8 h.
-- **Planeta:** 96×96 = 9.216 celdas lógicas en 6 franjas; se dibuja con 32×32 = 1.024 partes. Con 6 jugadores: 25 % en ~5,5 min, 100 % en ~22 min (celdas por lanzamiento x3, decisión del 27 nov).
+- **Planeta:** 96×96 = 9.216 celdas lógicas en 6 franjas; se dibuja con 32×32 = 1.024 partes. Con 6 jugadores: 25 % en ~5,5 min, 100 % en ~22 min (celdas por lanzamiento x3, decisión del 27 nov; un lanzamiento medio da ≈5,39 celdas ≈ 0,06 % del planeta).
 - **Bloom Event** al 25/50/75 %: 10 min de ×2 dinero y +0,5 suerte para todos. **100 %:** 5 min de ingresos + 1 Huevo Estelar gratis para todos; siguiente planeta (+10 % de dinero en ese servidor).
 - **Combo:** otro jugador a ≤ 30 studs soltó hace ≤ 1 s → +25 % distancia y +0,1 suerte.
 - **Diario:** ciclo de 7 días. Día 3 de racha → Turbo ×2 de entrenamiento gratis para siempre. Día 7 → 1 Huevo Estelar gratis.
-- **FTUE:** primer lanzamiento siempre Poco común; primera mejora (30 $) a los ~20–30 s; sin ventanas de compra los primeros 3 minutos.
+- **FTUE:** primer lanzamiento siempre Poco común; primera mejora (30 $) a los ~20–30 s; sin ventanas de compra los primeros 3 minutos (solo la primera sesión de cada cuenta). **Tutorial guiado de 3 pasos** (lanza → mejora → mira tu jardín) con banner y flecha; el servidor avanza los pasos por hechos y el último solo con el botón "¡Entendido!"; quien ya tiene ≥5 lanzamientos lo salta.
+- **Misiones diarias** (se reinician cada día UTC, sin castigo por perder un día): lanzar 10 cápsulas, comprar 2 mejoras, restaurar 40 celdas. Recompensa: dinero personal (120 s de ingreso, mínimo 100). El progreso es la diferencia de contadores que el servidor ya lleva.
+- **Meta visible:** etiqueta bajo la barra del planeta con la "Próxima criatura" sin descubrir y la "Próxima zona". **Aviso de combo:** barra de 1 s cuando un compañero cercano acaba de lanzar (la ventana real del combo).
+- **Mundo:** plataforma de lanzamiento procedural (con el spawn de los jugadores), escenografía por zona que aparece al restaurar celdas (helechos, dunas, cristales, hielo, árboles, lava; tope 24 por franja), ambiente que pasa de gris/apagado a cálido/verde con el % del planeta, partículas al aterrizar y fuegos artificiales al 100 %, y criaturas procedurales (cuerpo + ojos + rasgos por rareza; brillo en Épico/Legendario y mutaciones) con balanceo suave en el cliente.
 
 ## 3. Monetización (precios BASE; el juego los lee en vivo)
 
@@ -102,25 +105,31 @@ Ritmo simulado (activo, sin pases): zona 2 ~1 min, 3 ~3 min, 4 ~15 min, 5 ~1,5 h
 ## 4. Arquitectura del código
 
 ```text
-src/shared  -> ReplicatedStorage.Shared   Types, Net, Config/{Rarities,Mutations,Zones,Creatures,Products},
-                                          Util/{Odds,WeightedRandom,Meter,NumberFormat,Formulas}
+src/shared  -> ReplicatedStorage.Shared   Types, Net,
+                                          Config/{Rarities,Mutations,Zones,Creatures,Products,Ambience,
+                                                  Scenery,Quests,Sfx},
+                                          Util/{Odds,WeightedRandom,Meter,NumberFormat,Formulas,CreatureBuilder}
 src/server  -> ServerScriptService.Server Main.server, Services/{DataService,PolicyGate,PurchaseService,
                                           CreatureService,TerraformService,EconomyService,ThrowService,
-                                          DailyService,PlusService}, Util/{Retry,RateLimiter,Validate,Perks}
-src/client  -> StarterPlayerScripts.Client Main.client, Controllers/{Hud,Throw,Shop}, UI/{Ui,UIPool,PriceService}
-tests       -> ServerStorage.Tests        TestRunner (10 pruebas)
+                                          DailyService,PlusService,GardenVisualService,SceneryService,
+                                          LaunchPlatformService,ProgressionService},
+                                          Util/{Retry,RateLimiter,Validate,Perks,Progression}
+src/client  -> StarterPlayerScripts.Client Main.client, Controllers/{Hud,Throw,Shop,Index,Ambience,Effects,
+                                          CreatureAnimator,Progress}, UI/{Ui,UIPool,PriceService,Sfx,Vfx}
+tests       -> ServerStorage.Tests        TestRunner (25 pruebas)
 ReplicatedStorage.Remotes (default.project.json): TrainTap, ThrowStart, ThrowRelease, SetAutoLaunch,
-  BuyUpgrade, RequestPurchase, OpenFreeEgg, ClaimDaily (C→S) · ThrowResult, Notify (S→C)
-ReplicatedStorage.ServerState (atributos): Planet, PlanetPercent, BloomUntil
-Workspace.PlanetOrigin (lo coloca Dev B) · Workspace.PlanetCells (lo genera el servidor)
+  BuyUpgrade, RequestPurchase, OpenFreeEgg, ClaimDaily, ClaimQuest, TutorialAck (C→S) · ThrowResult, Notify (S→C)
+ReplicatedStorage.ServerState (atributos): Planet, PlanetPercent (0–100), BloomUntil
+Workspace.PlanetOrigin (opcional, lo coloca Dev B; si no existe el origen es (0,0,120)) ·
+  Workspace.PlanetCells, PlanetScenery, LaunchPlatform, Jardin_<jugador> (los genera el servidor)
 ```
 
-- **Estado al cliente** por atributos del Player escritos solo por el servidor: `Cash, Power, IncomePerSec, TrainRate, Luck, TrainingLevel, CapsuleLevel, BestZone, Discovered, FreeEggs, EggPity, DailyStreak, DailyAvailable, TurboUnlocked, PaidRandomRestricted, Pass_<clave>, PlusPerk, BoostUntil, AdLuckUntil, StarterPackOwned, AutoLaunchOn`.
+- **Estado al cliente** por atributos del Player escritos solo por el servidor: `Cash, Power, IncomePerSec, TrainRate, Luck, TrainingLevel, CapsuleLevel, BestZone, Discovered, FreeEggs, EggPity, DailyStreak, DailyAvailable, TurboUnlocked, PaidRandomRestricted, Pass_<clave>, PlusPerk, BoostUntil, AdLuckUntil, StarterPackOwned, AutoLaunchOn, DiscoveredMask, ShopAvailableAt, TutorialStep, QuestProgress1..3, QuestClaimed1..3, GoalText`.
 - **DataService:** un registro `{data, lock}` por jugador en `PlayerData_v1` (no cambiar el nombre en producción). UpdateAsync con bloqueo de sesión (TTL 300 s), reintentos con backoff exponencial, autoguardado cada 120 s, guardado y liberación en `PlayerRemoving`, `BindToClose` con 25 s. En un place sin publicar (`game.GameId == 0`) usa memoria (pruebas locales). Campos nuevos: añadirlos a `defaultData` (se rellenan solos con `reconcile`).
 - **ProcessReceipt** idempotente: anota `PurchaseId` (últimos 50) y guarda antes de devolver `PurchaseGranted`.
 - **Probabilidades:** `Odds.forLuck` / `Odds.forEgg` se usan para MOSTRAR y para TIRAR (misma función).
-- **Rendimiento:** pools (`UIPool`) para avisos y proyectiles; HUD refrescado 4 veces/s; partes del planeta ancladas, sin colisión ni sombras.
-- **Pruebas:** `return require(game:GetService("ServerStorage").Tests.TestRunner).run()` con la herramienta MCP `execute_luau`.
+- **Rendimiento:** pools (`UIPool`) para avisos, proyectiles y emisores de partículas; HUD refrescado 4 veces/s; partes del planeta, escenografía y criaturas ancladas y sin colisión; tope de escenografía por franja y animación de criaturas solo cerca de la cámara. En Studio los FPS se quedan en ≈15 aunque se quite contenido (tope de Studio): no usarlos como métrica; medir en un cliente real.
+- **Pruebas:** `return require(game:GetService("ServerStorage").Tests.TestRunner).run()` con la herramienta MCP `execute_luau` (25 OK sobre `master`). En modo Edit el `require` cachea: tras cambiar de rama, córrelas en Play (`datamodel_type: Server`).
 
 ### Contrato de RemoteEvents (resumen)
 | Evento | Args | Validación | Límite |
@@ -133,6 +142,8 @@ Workspace.PlanetOrigin (lo coloca Dev B) · Workspace.PlanetCells (lo genera el 
 | RequestPurchase | clave de producto | lista blanca, id ≠ 0, PolicyService si es aleatorio, no comprado | 2/s |
 | OpenFreeEgg | — | freeEggs > 0 | 2/s |
 | ClaimDaily | — | no reclamado hoy (UTC) | 1/s |
+| ClaimQuest | índice entero 1..3 | misión completa y no reclamada | 3/s |
+| TutorialAck | — | solo vale en el paso 3 del tutorial | 2/s |
 
 ## 5. Flujo de trabajo
 
@@ -177,6 +188,9 @@ A 30 días, jugadores simultáneos medios: ≥ 1.000 invertir · 300–1.000 seg
 5. Progreso del planeta por servidor (no persistente); se guarda la contribución personal.
 6. Sin IA en tiempo de ejecución (coste $0), por eso se descartó "Survive Your Ideas".
 7. Interfaz del MVP creada por código; Dev B puede rediseñarla en Studio.
+8. Balance del planeta x3 celdas por lanzamiento (27 nov): 100 % en ~22 min con 6 jugadores en vez de ~66.
+9. Mundo, escenografía y criaturas procedurales en código (sin modelos externos ni recursos gratuitos sin auditar) hasta que haya arte real.
+10. No optimizar sin un cuello de botella medido en un cliente real (los FPS de Studio no valen).
 
 ## 10. Pendiente / preguntas abiertas
 
@@ -185,3 +199,4 @@ A 30 días, jugadores simultáneos medios: ≥ 1.000 invertir · 300–1.000 seg
 - Verificar en Creator Hub el precio actual de crear un grupo y los requisitos vigentes de Kids & Select antes de pagar.
 - El código del repositorio inicial no se compiló fuera de Studio: en la semana 0 hay que pasar Script Analysis y corregir avisos de tipos con Claude.
 - Ajustar balance con datos reales de la prueba cerrada (22 dic).
+- Probar con 2+ jugadores y la celebración al 100 % (no se probaron); ajustar a ojo los valores visuales (ambiente, criaturas, plataforma, escenografía); identificar el aviso `ContentId rbxassetid://203785492` (origen desconocido); sustituir sonidos temporales; revisión cruzada de lo mergeado el 27 nov; invitar al segundo cofundador a GitHub.

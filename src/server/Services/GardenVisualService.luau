@@ -11,13 +11,15 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Types = require(ReplicatedStorage.Shared.Types)
 local Rarities = require(ReplicatedStorage.Shared.Config.Rarities)
 local Creatures = require(ReplicatedStorage.Shared.Config.Creatures)
+local TerraformService = require(script.Parent.TerraformService)
+local TerraformService = require(script.Parent.TerraformService)
 
 type PlayerData = Types.PlayerData
 
 local SLOT_SIZE = 3
 local SLOT_GAP = 1.5
 local COLUMNS = 4
-local RADIUS = 220 -- lejos de la cuadrícula del planeta (ver TerraformService.origin)
+local RADIUS = 220 -- lejos de la cuadrícula del planeta (centrado en TerraformService.getOrigin)
 local MAX_SLOTS_AROUND_CIRCLE = 12 -- si hay más jugadores, se reparten en el mismo círculo
 
 local GardenVisualService = {}
@@ -28,7 +30,7 @@ local nextSlot = 0
 local function basePositionFor(player: Player): Vector3
 	local index = slotIndex[player] or 0
 	local angle = (index % MAX_SLOTS_AROUND_CIRCLE) * (math.pi * 2 / MAX_SLOTS_AROUND_CIRCLE)
-	return Vector3.new(math.cos(angle) * RADIUS, 0, 120 + math.sin(angle) * RADIUS)
+	return TerraformService.getOrigin() + Vector3.new(math.cos(angle) * RADIUS, 0, math.sin(angle) * RADIUS)
 end
 
 local function rebuild(player: Player, data: PlayerData)

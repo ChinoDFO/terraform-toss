@@ -125,7 +125,7 @@ function EconomyService.init()
 
 	DataService.Loaded:Connect(function(player: Player, data: PlayerData)
 		grantOffline(player, data)
-		player:SetAttribute("Discovered", CreatureService.discoveredCount(data))
+		CreatureService.syncDiscovered(player, data)
 		GardenVisualService.sync(player, data)
 		sync(player, data, 0)
 	end)

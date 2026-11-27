@@ -1,5 +1,5 @@
 --!strict
--- PLACEHOLDER de "jardín 3D" (Semana 2): un cubo de color por criatura del jardín de cada
+-- PLACEHOLDER de "jardín 3D" (Semana 2): una criatura procedural (CreatureBuilder) por slot del jardín de cada
 -- jugador, en un punto fijo alrededor del origen del planeta. Nada de esto decide ingresos
 -- ni nada de juego -- es SOLO la vista de datos que el servidor ya tiene (data.garden).
 -- Dev B lo puede rehacer por completo (modelos reales, un terreno propio por jugador, etc.)
@@ -9,8 +9,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Types = require(ReplicatedStorage.Shared.Types)
-local Rarities = require(ReplicatedStorage.Shared.Config.Rarities)
-local Creatures = require(ReplicatedStorage.Shared.Config.Creatures)
+local CreatureBuilder = require(ReplicatedStorage.Shared.Util.CreatureBuilder)
 local TerraformService = require(script.Parent.TerraformService)
 local TerraformService = require(script.Parent.TerraformService)
 
@@ -69,27 +68,13 @@ local function rebuild(player: Player, data: PlayerData)
 	nameTag.Parent = folder
 
 	for i, slot in data.garden do
-		local creature = Creatures.BY_ID[slot.creatureId]
-		if creature then
-			local rarity = Rarities.DEFS[creature.rarity]
-			local col = (i - 1) % COLUMNS
-			local rowIndex = (i - 1) // COLUMNS
-			local part = Instance.new("Part")
-			part.Name = creature.id
-			part.Anchored = true
-			part.CanCollide = false
-			part.CanQuery = false
-			part.CanTouch = false
-			part.Material = Enum.Material.Neon
-			part.Size = Vector3.new(SLOT_SIZE, SLOT_SIZE, SLOT_SIZE)
-			part.Color = rarity.color
-			part.Position = base
-				+ Vector3.new(
-					(col - (COLUMNS - 1) / 2) * (SLOT_SIZE + SLOT_GAP),
-					SLOT_SIZE / 2,
-					rowIndex * (SLOT_SIZE + SLOT_GAP)
-				)
-			part.Parent = folder
+		local col = (i - 1) % COLUMNS
+		local rowIndex = (i - 1) // COLUMNS
+		local position = base
+			+ Vector3.new((col - (COLUMNS - 1) / 2) * (SLOT_SIZE + SLOT_GAP), 0, rowIndex * (SLOT_SIZE + SLOT_GAP))
+		local model = CreatureBuilder.build(slot.creatureId, slot.mutation, position)
+		if model then
+			model.Parent = folder
 		end
 	end
 

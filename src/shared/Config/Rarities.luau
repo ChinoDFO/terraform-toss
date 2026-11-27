@@ -21,7 +21,7 @@ local DEFS: { [string]: RarityDef } = {
 		baseWeight = 62,
 		luckExponent = 0,
 		incomeMult = 1,
-		cellsPerThrow = 1,
+		cellsPerThrow = 3,
 		color = Color3.fromRGB(190, 190, 190),
 	},
 	PocoComun = {
@@ -30,7 +30,7 @@ local DEFS: { [string]: RarityDef } = {
 		baseWeight = 25,
 		luckExponent = 0.35,
 		incomeMult = 2,
-		cellsPerThrow = 2,
+		cellsPerThrow = 6,
 		color = Color3.fromRGB(110, 210, 110),
 	},
 	Raro = {
@@ -39,7 +39,7 @@ local DEFS: { [string]: RarityDef } = {
 		baseWeight = 10,
 		luckExponent = 0.6,
 		incomeMult = 5,
-		cellsPerThrow = 4,
+		cellsPerThrow = 12,
 		color = Color3.fromRGB(80, 150, 255),
 	},
 	Epico = {
@@ -48,7 +48,7 @@ local DEFS: { [string]: RarityDef } = {
 		baseWeight = 2.7,
 		luckExponent = 0.85,
 		incomeMult = 15,
-		cellsPerThrow = 8,
+		cellsPerThrow = 24,
 		color = Color3.fromRGB(190, 90, 255),
 	},
 	Legendario = {
@@ -57,7 +57,7 @@ local DEFS: { [string]: RarityDef } = {
 		baseWeight = 0.3,
 		luckExponent = 1,
 		incomeMult = 60,
-		cellsPerThrow = 20,
+		cellsPerThrow = 60,
 		color = Color3.fromRGB(255, 190, 40),
 	},
 }

@@ -14,6 +14,7 @@ local Rarities = require(ReplicatedStorage.Shared.Config.Rarities)
 local Mutations = require(ReplicatedStorage.Shared.Config.Mutations)
 local Creatures = require(ReplicatedStorage.Shared.Config.Creatures)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
+local CreatureBuilder = require(ReplicatedStorage.Shared.Util.CreatureBuilder)
 local Validate = require(ServerScriptService.Server.Util.Validate)
 local RateLimiter = require(ServerScriptService.Server.Util.RateLimiter)
 local CreatureService = require(ServerScriptService.Server.Services.CreatureService)
@@ -203,6 +204,31 @@ test("Plataforma: el spawn queda sobre la base y mira al planeta", function()
 	assert(cf.LookVector:Dot(Vector3.new(0, 0, 1)) > 0.99, "mira hacia el planeta (+Z)")
 	local moved = LaunchPlatformService.spawnCFrame(origin + Vector3.new(0, 0, 50))
 	assert(near(moved.Position.Z - cf.Position.Z, 50), "sigue al origen del planeta")
+test("CreatureBuilder: rasgos por rareza, mutaciones y construcción de las 30 criaturas", function()
+	local common = CreatureBuilder.describe("z1_Comun", "Ninguna")
+	local legend = CreatureBuilder.describe("z1_Legendario", "Ninguna")
+	assert(common ~= nil and legend ~= nil)
+	assert(#common.traits == 0 and #legend.traits == 4, "más rareza, más rasgos")
+	assert(legend.bodySize > common.bodySize and legend.glow and not common.glow)
+	local giant = CreatureBuilder.describe("z1_Comun", "Gigante")
+	assert(giant ~= nil and giant.scale > 1)
+	local rainbow = CreatureBuilder.describe("z1_Comun", "Arcoiris")
+	assert(rainbow ~= nil and rainbow.rainbow and rainbow.glow)
+	assert(CreatureBuilder.describe("no_existe", "Ninguna") == nil, "id inválido -> nil")
+	for _, creature in Creatures.LIST do
+		local model = CreatureBuilder.build(creature.id, "Ninguna", Vector3.zero)
+		assert(model ~= nil and model:FindFirstChild("Cuerpo") ~= nil, creature.id)
+		model:Destroy()
+	end
+end)
+
+test("Planeta: un lanzamiento medio sube ~0,06 % (ritmo acordado x3)", function()
+	local expected = 0
+	for _, id in Rarities.ORDER do
+		local def = Rarities.DEFS[id]
+		expected += def.baseWeight / 100 * def.cellsPerThrow
+	end
+	assert(expected > 5 and expected < 6, "celdas medias por lanzamiento = " .. expected)
 end)
 
 function TestRunner.run(): string

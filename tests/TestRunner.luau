@@ -193,6 +193,18 @@ test("Escenografía: respeta el tope por franja y la probabilidad", function()
 	assert(#Scenery.KIND_BY_ZONE == Zones.COUNT, "un tipo de prop por zona")
 end)
 
+test("Plataforma: el spawn queda sobre la base y mira al planeta", function()
+	local LaunchPlatformService = require(ServerScriptService.Server.Services.LaunchPlatformService)
+	local origin = Vector3.new(10, 5, 200)
+	local cf = LaunchPlatformService.spawnCFrame(origin)
+	assert(near(cf.Position.X, origin.X), "centrado en X respecto al origen")
+	assert(cf.Position.Z < origin.Z, "detrás de la primera fila del planeta")
+	assert(cf.Position.Y > origin.Y, "encima de la base")
+	assert(cf.LookVector:Dot(Vector3.new(0, 0, 1)) > 0.99, "mira hacia el planeta (+Z)")
+	local moved = LaunchPlatformService.spawnCFrame(origin + Vector3.new(0, 0, 50))
+	assert(near(moved.Position.Z - cf.Position.Z, 50), "sigue al origen del planeta")
+end)
+
 function TestRunner.run(): string
 	local passed, failed = 0, 0
 	local lines: { string } = {}

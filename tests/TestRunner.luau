@@ -184,6 +184,15 @@ test("Terraform: getOrigin devuelve un Vector3 (los servicios no fijan 0,0,120 a
 	assert(typeof(TerraformService.getOrigin()) == "Vector3")
 end)
 
+test("Escenografía: respeta el tope por franja y la probabilidad", function()
+	local SceneryService = require(ServerScriptService.Server.Services.SceneryService)
+	local Scenery = require(ReplicatedStorage.Shared.Config.Scenery)
+	assert(SceneryService.shouldSpawn(0, 0), "con cupo y tirada baja nace")
+	assert(not SceneryService.shouldSpawn(0, 0.99), "tirada alta no nace")
+	assert(not SceneryService.shouldSpawn(Scenery.MAX_PER_BAND, 0), "sin cupo nunca nace")
+	assert(#Scenery.KIND_BY_ZONE == Zones.COUNT, "un tipo de prop por zona")
+end)
+
 function TestRunner.run(): string
 	local passed, failed = 0, 0
 	local lines: { string } = {}

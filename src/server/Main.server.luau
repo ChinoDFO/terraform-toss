@@ -11,8 +11,12 @@ local ThrowService = require(Services.ThrowService)
 local DailyService = require(Services.DailyService)
 local PlusService = require(Services.PlusService)
 local GardenVisualService = require(Services.GardenVisualService)
+local SceneryService = require(Services.SceneryService)
+local LaunchPlatformService = require(Services.LaunchPlatformService)
 
 TerraformService.init()
+SceneryService.init()
+LaunchPlatformService.init()
 PolicyGate.init()
 PurchaseService.init() -- antes de DataService para escuchar Loaded a tiempo
 EconomyService.init()

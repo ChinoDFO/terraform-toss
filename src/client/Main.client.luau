@@ -8,7 +8,9 @@ local Controllers = script.Parent.Controllers
 local HudController = require(Controllers.HudController)
 local ThrowController = require(Controllers.ThrowController)
 local ShopController = require(Controllers.ShopController)
+local AmbienceController = require(Controllers.AmbienceController)
 
 HudController.init()
 ThrowController.init()
 ShopController.init()
+AmbienceController.init()

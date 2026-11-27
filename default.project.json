@@ -19,7 +19,9 @@
         "OpenFreeEgg": { "$className": "RemoteEvent" },
         "ClaimDaily": { "$className": "RemoteEvent" },
         "ThrowResult": { "$className": "RemoteEvent" },
-        "Notify": { "$className": "RemoteEvent" }
+        "Notify": { "$className": "RemoteEvent" },
+        "ClaimQuest": { "$className": "RemoteEvent" },
+        "TutorialAck": { "$className": "RemoteEvent" }
       },
       "ServerState": {
         "$className": "Folder"

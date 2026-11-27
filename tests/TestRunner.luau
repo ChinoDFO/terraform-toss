@@ -14,6 +14,8 @@ local Rarities = require(ReplicatedStorage.Shared.Config.Rarities)
 local Mutations = require(ReplicatedStorage.Shared.Config.Mutations)
 local Creatures = require(ReplicatedStorage.Shared.Config.Creatures)
 local Zones = require(ReplicatedStorage.Shared.Config.Zones)
+local Quests = require(ReplicatedStorage.Shared.Config.Quests)
+local Progression = require(ServerScriptService.Server.Util.Progression)
 local Ambience = require(ReplicatedStorage.Shared.Config.Ambience)
 local CreatureBuilder = require(ReplicatedStorage.Shared.Util.CreatureBuilder)
 local Validate = require(ServerScriptService.Server.Util.Validate)
@@ -243,6 +245,68 @@ test("Ambiente: 0 % gris apagado, 100 % cálido y brillante, sin NaN", function(
 	assert(Ambience.at(0 / 0).brightness == dead.brightness, "NaN se trata como 0")
 	local mid = Ambience.at(50).brightness
 	assert(mid > dead.brightness and mid < alive.brightness)
+end)
+
+local function freshData(): any
+	return {
+		cash = 0,
+		trainingLevel = 0,
+		capsuleLevel = 0,
+		bestZone = 1,
+		garden = {},
+		index = {},
+		totalThrows = 0,
+		cellsRestored = 0,
+		tutorialStep = 1,
+		questDay = 0,
+		questBase = { throws = 0, upgrades = 0, cells = 0 },
+		questClaimed = { false, false, false },
+	}
+end
+
+test("Misiones: se reinician por día y miden la diferencia de contadores", function()
+	local data = freshData()
+	data.totalThrows = 50 -- historial previo: no cuenta para las misiones de hoy
+	assert(Progression.rollQuests(data, 20000), "el primer día se inicializa")
+	assert(not Progression.rollQuests(data, 20000), "el mismo día no reinicia")
+	assert(Progression.questProgress(data, 1) == 0)
+	data.totalThrows += 4
+	assert(Progression.questProgress(data, 1) == 4)
+	data.totalThrows += 100
+	assert(Progression.questProgress(data, 1) == Quests.QUESTS[1].target, "el progreso se acota al objetivo")
+	assert(Progression.questComplete(data, 1) and not Progression.questComplete(data, 2))
+	assert(not Progression.questComplete(data, 99), "índice inexistente")
+	data.questClaimed[1] = true
+	assert(Progression.rollQuests(data, 20001) and data.questClaimed[1] == false, "nuevo día = misiones nuevas")
+	assert(Progression.questProgress(data, 1) == 0)
+	assert(Progression.questReward(data) >= Quests.REWARD_MIN)
+end)
+
+test("Tutorial: avanza 1->2->3 por hechos del servidor y el 3->4 solo con 'Entendido'", function()
+	local data = freshData()
+	assert(Progression.advanceTutorial(data) == 1)
+	data.totalThrows = 1
+	data.tutorialStep = Progression.advanceTutorial(data)
+	assert(data.tutorialStep == 2)
+	data.trainingLevel = 1
+	data.tutorialStep = Progression.advanceTutorial(data)
+	assert(data.tutorialStep == 3)
+	assert(Progression.advanceTutorial(data) == 3, "el paso 3 no avanza solo")
+	local veteran = freshData()
+	veteran.totalThrows = Quests.TUTORIAL_SKIP_THROWS
+	assert(Progression.advanceTutorial(veteran) == Quests.TUTORIAL_DONE, "un veterano salta el tutorial")
+end)
+
+test("Meta: propone la próxima criatura y la próxima zona", function()
+	local data = freshData()
+	local goal = Progression.nextGoal(data)
+	assert(string.find(goal, Creatures.LIST[1].name, 1, true), "primera criatura sin descubrir: " .. goal)
+	assert(string.find(goal, Zones.ZONES[2].name, 1, true), "próxima zona: " .. goal)
+	for _, creature in Creatures.LIST do
+		data.index[creature.id] = true
+	end
+	data.bestZone = Zones.COUNT
+	assert(string.find(Progression.nextGoal(data), "completa", 1, true), "todo alcanzado")
 end)
 
 function TestRunner.run(): string

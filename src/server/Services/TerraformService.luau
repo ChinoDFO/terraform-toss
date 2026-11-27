@@ -27,6 +27,8 @@ local visualParts: { BasePart } = {}
 local origin = Vector3.new(0, 0, 120)
 local rng = Random.new()
 local onRestored: { (number) -> () } = {}
+local onCell: { (number, Vector3) -> () } = {}
+local onReset: { () -> () } = {}
 
 local TerraformService = {}
 
@@ -117,6 +119,9 @@ local function resetGrid()
 	for _, part in visualParts do
 		part.Color = DEAD_COLOR
 	end
+	for _, callback in onReset do
+		callback()
+	end
 end
 
 local function percent(): number
@@ -184,6 +189,9 @@ function TerraformService.applyThrow(zone: number, cells: number): (number, Vect
 		changed += 1
 		local row, col = rowColOf(index)
 		touched[visualIndexOf(row, col)] = true
+		for _, callback in onCell do
+			callback(band, worldPositionOf(row, col))
+		end
 		if landing == nil then
 			landing = worldPositionOf(row, col)
 		end
@@ -209,6 +217,16 @@ end
 -- cosas relativas al planeta sin duplicar la posición.
 function TerraformService.getOrigin(): Vector3
 	return origin
+end
+
+-- Avisa de cada celda restaurada (franja y posición en el mundo). Lo usa la escenografía.
+function TerraformService.onCellRestored(callback: (number, Vector3) -> ())
+	table.insert(onCell, callback)
+end
+
+-- Avisa cuando la cuadrícula se reinicia (siguiente planeta).
+function TerraformService.onGridReset(callback: () -> ())
+	table.insert(onReset, callback)
 end
 
 function TerraformService.onPlanetRestored(callback: (number) -> ())
